@@ -196,11 +196,13 @@
 
     <h4>10. 곡면 탭</h4>
     <ul>
-      <li><b>오목</b>: 관람자를 감싸는 곡면 / <b>볼록</b>: 기둥처럼 바깥으로 휜 곡면.</li>
+      <li><b>구간을 이어 붙입니다</b>: 왼쪽 → 오른쪽으로 <b>곡면·평면</b> 구간을 추가하세요. 예) 곡면+평면+곡면, S자(오목+볼록+오목). 구간끼리는 매끄럽게(접선으로) 이어집니다.</li>
+      <li><b>오목</b>: 관람자를 감싸는 곡면 / <b>볼록</b>: 바깥으로 튀어나온 곡면. 구간마다 반경 R과 캐비넷 구성을 따로 넣습니다.</li>
       <li><b>R</b>: 원 중심에서 스크린 앞면까지 반경.</li>
       <li><b>플렉시블</b>은 매끈한 곡선(가로 파이프 벤딩), <b>평판 꺾음</b>은 일반 캐비넷을 조금씩 꺾어 붙인 다각형입니다.</li>
       <li><b>먹매김 방법</b>: 바닥에 1번과 마지막 파이프 중심을 찍고 실을 띄웁니다. 실을 따라 X만큼 간 지점에서 직각으로 Y만큼 떨어진 곳이 파이프 중심입니다.</li>
-      <li><b>벤딩 파이프 규격</b>: 벤딩 업체에 줄 반경과 절단 길이입니다. 여유 절단분은 따로 더하세요.</li>
+      <li><b>벤딩 파이프 규격</b>: 곡면 구간마다 반경과 절단 길이가 나옵니다. 오목↔볼록이 바뀌는 곳은 벤딩 방향이 반대입니다. 여유 절단분은 따로 더하세요.</li>
+      <li>먹매김 표의 <b>Y는 +면 벽쪽, −면 관람측</b>입니다. S자처럼 기준선을 가로지르는 경우 부호를 꼭 확인하세요.</li>
     </ul>
 
     <h4>11. 시공 순서 (ㄱ·ㄷ)</h4>
@@ -227,6 +229,7 @@
 
     <h4>업데이트 내역</h4>
     <ul>
+      <li><b>v2.5</b>: 곡면을 구간으로 이어 붙이기 (곡면+평면+곡면, 오목+볼록+오목 등)</li>
       <li><b>v2.4</b>: 내측 코너 겹침을 픽셀 단위(피치 × 1~3픽셀)로 계산</li>
       <li><b>v2.3</b>: 웹앱(홈 화면 설치·오프라인), 현장별 저장, 공유 링크, 인쇄·PDF</li>
       <li><b>v2.2</b>: ㄷ 중앙 벽 먼저 시공 → 옆 벽은 설치된 스크린 앞면 기준 측정</li>
@@ -325,12 +328,12 @@ const PRESETS = {
 const DEFAULT_COMMON = { pipe: 50, t: 61, depthMode: 'recess', D: 120, adj: -2, standoff: 29, shift: 0, tol: 2, pitch: 2.5, ovPx: 2 };
 // 내측 코너에서 덮는 면이 맞대는 면 앞면 뒤로 겹치는 길이 (픽셀 피치 × 픽셀 수, 스크린 두께 이하)
 function cornerOverlap(c) { return Math.max(0, Math.min(num(c.t), num(c.pitch) * num(c.ovPx))); }
-const DEFAULT_ARC = { R: 3000, shape: 'concave', kind: 'flex', minR: '', H: 2400, bottomEnd: 'free', topEnd: 'free', dir: 'h', alignB: 'auto', manB: 0, cols: [it(320, 15)], rows: [it(160, 15)] };
+const DEFAULT_ARC = { minR: '', H: 2400, bottomEnd: 'free', topEnd: 'free', dir: 'h', alignB: 'auto', manB: 0, rows: [it(160, 15)], segs: [{ type: 'arc', shape: 'concave', kind: 'flex', R: 3000, cols: [it(320, 15)] }] };
 function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.5';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -339,7 +342,9 @@ function normalizeState(s) {
   const d = defaultState();
   s.mode = s.mode === 'arc' ? 'arc' : 'chain';
   s.common = { ...DEFAULT_COMMON, ...s.common };
+  const hadSegs = Array.isArray(s.arc && s.arc.segs) && s.arc.segs.length;
   s.arc = { ...d.arc, ...s.arc };
+  if (!hadSegs) s.arc.segs = arcSegs({ ...s.arc, segs: null });
   s.chain = { ...chainBase(), ...s.chain };
   if (s.chain.base == null) s.chain.base = 'auto';
   if (!Array.isArray(s.chain.faces) || !s.chain.faces.length) s.chain = d.chain;
@@ -583,89 +588,107 @@ function applyInstallOrder(out, ch, Ts) {
   out.faces.sort((a, c) => a.order - c.order || a.idx - c.idx);
 }
 
+// 곡면 구간 목록 (예전 단일 곡면 저장본도 변환)
+function arcSegs(a) {
+  if (Array.isArray(a.segs) && a.segs.length) return a.segs;
+  return [mkSeg('arc', a.shape || 'concave', a.kind || 'flex', a.R || 3000, clone(a.cols || [it(320, 15)]))];
+}
+function mkSeg(type, shape, kind, R, cols) { return { type, shape, kind, R, cols }; }
+const ARC_PRESETS = {
+  one: { label: '단일 오목', segs: () => [mkSeg('arc', 'concave', 'flex', 3000, [it(320, 15)])] },
+  cfc: { label: '곡면+평면+곡면', segs: () => [mkSeg('arc', 'concave', 'flex', 2000, [it(320, 6)]), mkSeg('flat', 'concave', 'flex', 0, [it(320, 8)]), mkSeg('arc', 'concave', 'flex', 2000, [it(320, 6)])] },
+  s3: { label: 'S자 (오목+볼록+오목)', segs: () => [mkSeg('arc', 'concave', 'flex', 2500, [it(320, 6)]), mkSeg('arc', 'convex', 'flex', 2500, [it(320, 6)]), mkSeg('arc', 'concave', 'flex', 2500, [it(320, 6)])] },
+  col: { label: '볼록 기둥형', segs: () => [mkSeg('arc', 'convex', 'flex', 1000, [it(320, 10)])] },
+};
+const segName = (sg, i) => `${i + 1}. ${sg.type === 'flat' ? '평면' : `${sg.shape === 'concave' ? '오목' : '볼록'} R${f(num(sg.R))}${sg.kind === 'poly' ? ' 꺾음' : ''}`}`;
+
+/* 구간을 이어 붙여 스크린 앞면 선을 따라 걷는다.
+ *  - 좌표: 왼쪽 끝 = (0,0), 진행 방향 +x, 벽쪽 = +y(왼쪽 법선), 관람측 = -y
+ *  - 오목 = 관람자 쪽으로 감쌈 → 오른쪽으로 휨(방향각 감소), 볼록 = 왼쪽으로 휨
+ *  - 구간끼리는 접선으로 매끄럽게 이어짐 */
 function computeArc(st) {
   const c = st.common, a = st.arc;
   const pipe = num(c.pipe), t = num(c.t), shift = num(c.shift), tol = num(c.tol);
-  const R = num(a.R), concave = a.shape === 'concave', sgn = concave ? 1 : -1;
-  const sizes = expand(a.cols);
-  const d = t + pipe * (a.dir === 'h' ? 1.5 : 0.5); // 스크린 앞면 → 세로 파이프 중심 (가로 메인이면 2열)
+  const d = t + pipe * (a.dir === 'h' ? 1.5 : 0.5); // 앞면 → 세로 파이프 중심
+  const segs = arcSegs(a);
   const warns = [];
-  if (R <= 0 || !sizes.length) return { error: '반경과 캐비넷 구성을 입력하세요.' };
-  const pt = (alpha, r) => [r * Math.sin(alpha), r * Math.cos(alpha)];
   const add = (p, q, k = 1) => [p[0] + q[0] * k, p[1] + q[1] * k];
   const sub = (p, q) => [p[0] - q[0], p[1] - q[1]];
   const dot = (p, q) => p[0] * q[0] + p[1] * q[1];
-  const nrm = p => { const l = Math.hypot(p[0], p[1]) || 1; return [p[0] / l, p[1] / l]; };
-  const tan = alpha => [Math.cos(alpha), -Math.sin(alpha)]; // 각도 증가 방향 접선
+  const dv = h => [Math.cos(h), Math.sin(h)];
+  const nv = h => [-Math.sin(h), Math.cos(h)]; // 벽쪽 법선
+  let P = [0, 0], h = 0, s = 0, no = 0;
+  const front = [[0, 0]], pieces = [], segInfo = [];
+  segs.forEach((sg, si) => {
+    const sizes = expand(sg.cols);
+    const R = num(sg.R), isArc = sg.type === 'arc';
+    if (isArc && R <= 0) { warns.push({ lv: 'err', tx: `${segName(sg, si)}: 반경을 입력하세요` }); return; }
+    const sgn = sg.shape === 'concave' ? -1 : 1;
+    const info = { si, sg, isArc, R, sgn, n: sizes.length, len: sizes.reduce((x, y) => x + y, 0), h0: h, P0: P, firstNo: no + 1, maxTurn: 0 };
+    if (isArc && sg.kind === 'flex' && num(a.minR) > 0 && R < num(a.minR)) warns.push({ lv: 'err', tx: `${segName(sg, si)}: 모듈 최소 곡률반경 ${f(num(a.minR))}mm보다 작음` });
+    if (isArc && sg.kind === 'poly' && sizes.some(w => w > 2 * R)) warns.push({ lv: 'err', tx: `${segName(sg, si)}: 캐비넷 폭이 지름보다 큼` });
+    sizes.forEach(w => {
+      no++;
+      const pc = { no, si, w, s0: s, P0: P };
+      if (!isArc) { pc.hin = pc.hout = h; P = add(P, dv(h), w); front.push(P); }
+      else if (sg.kind === 'flex') {
+        const C = add(P, nv(h), sgn * R), dh = sgn * w / R, N = Math.max(2, Math.ceil(Math.abs(dh) / 0.03));
+        pc.hin = h;
+        for (let k = 1; k <= N; k++) front.push(sub(C, nv(h + dh * k / N).map(v => v * sgn * R)));
+        h += dh; P = sub(C, nv(h).map(v => v * sgn * R)); pc.hout = h;
+      } else {
+        const D = 2 * Math.asin(Math.min(1, w / (2 * R))), hc = h + sgn * D / 2;
+        pc.hin = pc.hout = hc; P = add(P, dv(hc), w); front.push(P); h += sgn * D;
+        info.maxTurn = Math.max(info.maxTurn, D);
+      }
+      s += w; pc.P1 = P; pc.s1 = s; pieces.push(pc);
+    });
+    info.Th = Math.abs(h - info.h0); info.P1 = P; info.lastNo = no;
+    segInfo.push(info);
+  });
+  if (!pieces.length) return { error: '구간과 캐비넷 구성을 입력하세요.' };
 
-  let th, Th, front = [], pipes = [], joints = [];
-  if (a.kind === 'flex') {
-    th = sizes.map(w => w / R);
-    Th = th.reduce((x, y) => x + y, 0);
-    const rc = R + sgn * d;
-    if (rc <= 0) return { error: '볼록 곡면에서 반경이 스크린 두께+파이프보다 작습니다.' };
-    for (let k = 0; k <= 60; k++) front.push(pt(-Th / 2 + Th * k / 60, R));
-    let cum = 0;
-    const endAng = (pipe / 2) / rc;
-    pipes.push({ desc: NAMES_COL.start, P: pt(-Th / 2 + endAng, rc), alpha: -Th / 2 + endAng, fixed: true });
-    for (let i = 0; i < sizes.length - 1; i++) {
-      cum += th[i];
-      const al = -Th / 2 + cum + shift / R;
-      pipes.push({ desc: NAMES_COL.joint(i + 1, i + 2), P: pt(al, rc), alpha: al, turn: 0 });
-      joints.push(cum);
-    }
-    pipes.push({ desc: NAMES_COL.end(sizes.length), P: pt(Th / 2 - endAng, rc), alpha: Th / 2 - endAng, fixed: true });
-    if (num(a.minR) > 0 && R < num(a.minR)) warns.push({ lv: 'err', tx: `반경 R ${f(R)}mm < 모듈 최소 곡률반경 ${f(num(a.minR))}mm` });
-  } else {
-    th = sizes.map(w => 2 * Math.asin(Math.min(1, w / (2 * R))));
-    if (sizes.some(w => w > 2 * R)) warns.push({ lv: 'err', tx: '캐비넷 폭이 지름보다 큽니다.' });
-    Th = th.reduce((x, y) => x + y, 0);
-    const V = [pt(-Th / 2, R)]; let cum = -Th / 2;
-    th.forEach(x => { cum += x; V.push(pt(cum, R)); });
-    front = V;
-    const segN = i => { // 세그먼트 i 의 벽쪽 법선
-      const dd = nrm(sub(V[i + 1], V[i])); let nn = [-dd[1], dd[0]];
-      const mid = add(V[i], V[i + 1]); mid[0] /= 2; mid[1] /= 2;
-      if (dot(nn, mid) * sgn < 0) nn = [-nn[0], -nn[1]];
-      return { dd, nn };
-    };
-    const s0 = segN(0), sl = segN(sizes.length - 1);
-    pipes.push({ desc: NAMES_COL.start, P: add(add(V[0], s0.dd, pipe / 2), s0.nn, d), alpha: Math.atan2(-s0.dd[1], s0.dd[0]), fixed: true });
-    let ang = -Th / 2;
-    for (let i = 0; i < sizes.length - 1; i++) {
-      ang += th[i];
-      const turn = (th[i] + th[i + 1]) / 2;
-      const P = add(add(pt(ang, R + sgn * d / Math.cos(turn / 2)), [0, 0]), tan(ang), shift);
-      pipes.push({ desc: NAMES_COL.joint(i + 1, i + 2), P, alpha: ang, turn });
-      joints.push(ang + Th / 2);
-    }
-    pipes.push({ desc: NAMES_COL.end(sizes.length), P: add(add(V[V.length - 1], sl.dd, -pipe / 2), sl.nn, d), alpha: Math.atan2(-sl.dd[1], sl.dd[0]), fixed: true });
-    const maxTurn = Math.max(0, ...pipes.filter(p => p.turn != null).map(p => p.turn));
-    const g = 2 * t * Math.tan(maxTurn / 2);
-    if (concave) warns.push({ lv: 'info', tx: `오목 꺾음: 앞모서리 맞닿음 기준, 캐비넷 뒷면 V자 벌어짐 최대 ${f(g)}mm (문제 없음)` });
-    else warns.push({ lv: 'warn', tx: `볼록 꺾음: 앞모서리를 붙이면 뒷모서리 ${f(g)}mm 겹침 → 측면 경사 가공 또는 앞쪽 틈 ${f(g)}mm 발생` });
+  // 파이프: 양 끝단 + 모든 캐비넷 조인트
+  const pipes = [];
+  const p0 = pieces[0], pl = pieces[pieces.length - 1];
+  pipes.push({ desc: '1열 시작 끝단', P: add(add(p0.P0, dv(p0.hin), pipe / 2), nv(p0.hin), d), hb: p0.hin, s: pipe / 2, turn: 0, si: p0.si });
+  for (let i = 0; i < pieces.length - 1; i++) {
+    const A = pieces[i], B = pieces[i + 1];
+    let turn = B.hin - A.hout; turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+    const hb = A.hout + turn / 2;
+    const P = add(add(A.P1, nv(hb), d / Math.cos(turn / 2)), dv(hb), shift);
+    const border = A.si !== B.si;
+    pipes.push({ desc: `${A.no}-${B.no}열 조인트${border ? ` (구간 ${A.si + 1}→${B.si + 1})` : ''}`, P, hb, s: A.s1 + shift, turn, si: border ? `${A.si + 1}→${B.si + 1}` : A.si, border });
   }
-  if (Th >= 2 * Math.PI) warns.push({ lv: 'err', tx: `총 각도 ${deg(Th)}° — 한 바퀴를 넘습니다.` });
+  pipes.push({ desc: `${pl.no}열 끝 끝단`, P: add(add(pl.P1, dv(pl.hout), -pipe / 2), nv(pl.hout), d), hb: pl.hout, s: pl.s1 - pipe / 2, turn: 0, si: pl.si });
 
-  // 현(기준선) 좌표: 첫 파이프 ~ 마지막 파이프 중심을 잇는 직선
+  // 기준선: 1번 ~ 마지막 파이프 중심 (거의 닫힌 모양이면 시작 방향)
   const A0 = pipes[0].P, B0 = pipes[pipes.length - 1].P;
-  const u = nrm(sub(B0, A0)), v = [-u[1], u[0]];
-  pipes.forEach((p, i) => { p.index = i + 1; p.x = dot(sub(p.P, A0), u); p.y = dot(sub(p.P, A0), v); });
   const chordP = Math.hypot(B0[0] - A0[0], B0[1] - A0[1]);
+  const u = chordP > 1 ? [(B0[0] - A0[0]) / chordP, (B0[1] - A0[1]) / chordP] : [1, 0], v = [-u[1], u[0]];
+  pipes.forEach((p, i) => { p.index = i + 1; p.x = dot(sub(p.P, A0), u); p.y = dot(sub(p.P, A0), v); });
+  const fy = front.map(q => dot(sub(q, A0), v));
+  const depthRange = Math.max(...fy) - Math.min(...fy);
+
+  // 구간별 벤딩 · 꺾음 정보
+  segInfo.forEach(si => {
+    if (!si.isArc) return;
+    const lay = k => { const r = si.R + (si.sgn < 0 ? k : -k); return { r, arc: r * si.Th, chord: 2 * r * Math.sin(si.Th / 2), sag: r * (1 - Math.cos(si.Th / 2)) }; };
+    si.l1 = lay(t + pipe / 2); si.l2 = lay(t + pipe * 1.5);
+    if (si.l1.r <= 0 || si.l2.r <= 0) warns.push({ lv: 'err', tx: `${segName(si.sg, si.si)}: 반경이 스크린 두께+파이프보다 작음` });
+    if (si.sg.kind === 'poly') {
+      const g = 2 * t * Math.tan(si.maxTurn / 2);
+      warns.push(si.sgn < 0
+        ? { lv: 'info', tx: `${segName(si.sg, si.si)}: 앞모서리 맞닿음 기준, 뒷면 V자 벌어짐 최대 ${f(g)}mm (문제 없음)` }
+        : { lv: 'warn', tx: `${segName(si.sg, si.si)}: 앞모서리를 붙이면 뒷모서리 ${f(g)}mm 겹침 → 측면 경사 가공 또는 앞쪽 틈 ${f(g)}mm` });
+    }
+  });
+  // 구간 경계에서 평판 꺾음이 섞이면 꺾임 발생 안내
+  pipes.filter(p => p.border && Math.abs(p.turn) > 0.002).forEach(p => warns.push({ lv: 'info', tx: `구간 ${p.si} 경계에서 ${f(Math.abs(p.turn) * 180 / Math.PI)}° 꺾임` }));
 
   const Bl = layout1D({ Lraw: num(a.H), sizes: expand(a.rows).reverse(), sS: { kind: a.bottomEnd }, sE: { kind: a.topEnd },
     align: a.alignB, manual: a.manB, pipe, shift, tol, names: NAMES_ROW });
-
-  const layer = k => { // k: 스크린 앞면에서 파이프 중심까지 깊이
-    const r = R + sgn * k;
-    return { r, arc: r * Th, chord: 2 * r * Math.sin(Th / 2), sag: r * (1 - Math.cos(Th / 2)) };
-  };
-  return {
-    R, concave, kind: a.kind, sizes, Th, th, front, pipes, chordP, u, v, Bl, warns, pipe, t, d,
-    totalW: sizes.reduce((x, y) => x + y, 0),
-    screenChord: 2 * R * Math.sin(Th / 2), screenSag: R * (1 - Math.cos(Th / 2)),
-    layer1: layer(t + pipe / 2), layer2: layer(t + pipe * 1.5),
-  };
+  return { segs, segInfo, front, pipes, chordP, u, v, A0, Bl, warns, pipe, t, d, totalW: s, depthRange, turnTotal: h };
 }
 
 /* =========================================================
@@ -830,21 +853,34 @@ function chainForm() {
 }
 
 function arcForm() {
-  const a = state.arc, p = 'arc';
-  return `<div class="card"><h2>곡면 설정</h2>
-    ${field('곡면 방향', sel(p + '.shape', a.shape, [['concave', '오목 (관람자 쪽으로 감쌈)'], ['convex', '볼록 (기둥·외벽형)']]))}
-    ${field('캐비넷 형태', sel(p + '.kind', a.kind, [['flex', '플렉시블 모듈 (매끈한 곡선)'], ['poly', '평판 캐비넷 꺾음 (다각형)']]))}
-    ${field('스크린 앞면 반경 R', numIn(p + '.R', a.R), 'mm')}
-    ${a.kind === 'flex' ? field('모듈 최소 곡률반경 (선택)', numIn(p + '.minR', a.minR, '스펙'), 'mm') : ''}
+  const a = state.arc, p = 'arc', segs = arcSegs(a);
+  let h = `<div class="card"><h2>곡면 형태 프리셋</h2><div class="presets">
+    ${Object.entries(ARC_PRESETS).map(([k, x]) => `<button class="btn" data-act="arcPreset" data-key="${k}">${x.label}</button>`).join('')}
+    </div><div class="note">왼쪽 → 오른쪽 순서로 구간을 이어 붙입니다. 구간끼리는 <b>매끄럽게(접선으로)</b> 이어집니다.</div></div>`;
+  h += `<div class="card"><h2>곡면 공통</h2>
     ${field('주 파이프 방향', sel(p + '.dir', a.dir, [['h', '가로 벤딩 파이프 (단 조인트)'], ['v', '세로 직관 파이프 (열 조인트)']]))}
+    ${field('모듈 최소 곡률반경 (선택)', numIn(p + '.minR', a.minR, '스펙'), 'mm')}
     ${field('설치 높이 (바닥~천장/개구부)', numIn(p + '.H', a.H), 'mm')}
     ${field('하단', sel(p + '.bottomEnd', a.bottomEnd, END_OPTS))}
     ${field('상단', sel(p + '.topEnd', a.topEnd, END_OPTS))}
     ${field('세로 배치', sel(p + '.alignB', a.alignB, alignOpts('하단', '상단')))}
     ${a.alignB === 'manual' ? field('하단 여백', numIn(p + '.manB', a.manB), 'mm') : ''}
-    <div class="sub">가로 구성 (왼쪽 → 오른쪽) · ${a.kind === 'flex' ? '모듈 폭(호 길이)' : '캐비넷 폭'} × 수량</div>${listEd(p + '.cols', a.cols, '폭', '수량')}
     <div class="sub">세로 단 구성 (상단 → 하단) · 높이 × 단수</div>${listEd(p + '.rows', a.rows, '높이', '단수')}
   </div>`;
+  segs.forEach((sg, i) => {
+    const q = `${p}.segs.${i}`;
+    h += `<div class="card"><div class="face-head"><span style="font-size:.85rem;color:#90caf9;font-weight:700">구간 ${i + 1}</span><span style="flex:1"></span>
+      ${segs.length > 1 ? `<button class="btn sm danger" data-act="delSeg" data-idx="${i}">구간 삭제</button>` : ''}</div>
+      ${field('형태', sel(q + '.type', sg.type, [['arc', '곡면'], ['flat', '평면 (직선)']]))}
+      ${sg.type === 'arc' ? field('곡면 방향', sel(q + '.shape', sg.shape, [['concave', '오목 (관람자 쪽으로 감쌈)'], ['convex', '볼록 (바깥으로 튀어나옴)']]))
+        + field('캐비넷 형태', sel(q + '.kind', sg.kind, [['flex', '플렉시블 (매끈한 곡선)'], ['poly', '평판 캐비넷 꺾음']]))
+        + field('스크린 앞면 반경 R', numIn(q + '.R', sg.R), 'mm') : ''}
+      <div class="sub">가로 구성 (왼쪽 → 오른쪽) · ${sg.type === 'arc' && sg.kind === 'flex' ? '모듈 폭(호 길이)' : '캐비넷 폭'} × 수량</div>${listEd(q + '.cols', sg.cols, '폭', '수량')}
+    </div>`;
+    if (i < segs.length - 1) h += `<div class="note" style="text-align:center;margin:-6px 0 8px">↓ 접선으로 이어짐</div>`;
+  });
+  h += `<button class="btn" style="width:100%;margin-bottom:12px" data-act="addSeg">+ 오른쪽에 구간 추가</button>`;
+  return h;
 }
 
 let installPrompt = null;
@@ -1058,62 +1094,67 @@ function renderChain() {
 }
 
 function arcSVG(r) {
-  const flip = r.concave ? 1 : -1;
-  const m = p => [p[0], -p[1] * flip];
+  // 기준선(1번~마지막 파이프)이 수평이 되도록 돌려서 그림. 위 = 벽쪽, 아래 = 관람측
+  const phi = Math.atan2(r.u[1], r.u[0]);
+  const T = p => { const q = [p[0] - r.A0[0], p[1] - r.A0[1]]; return [q[0] * r.u[0] + q[1] * r.u[1], q[0] * r.v[0] + q[1] * r.v[1]]; };
   const xs = [], ys = [];
-  const reg = p => { const q = m(p); xs.push(q[0]); ys.push(q[1]); return q; };
+  const reg = p => { const q = T(p); xs.push(q[0]); ys.push(-q[1]); return [q[0], -q[1]]; };
   let g = '';
-  const pts = r.front.map(reg);
-  g += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="#4fc3f7" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
+  const fr = r.front.map(reg);
+  g += `<polyline points="${fr.map(p => p.join(',')).join(' ')}" fill="none" stroke="#4fc3f7" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
   const A0 = reg(r.pipes[0].P), B0 = reg(r.pipes[r.pipes.length - 1].P);
   g += `<line x1="${A0[0]}" y1="${A0[1]}" x2="${B0[0]}" y2="${B0[1]}" stroke="#bbb" stroke-dasharray="8 6" vector-effect="non-scaling-stroke"/>`;
   const M0 = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1);
-  const fs = M0 / 32;
+  const fs = Math.max(M0 / 34, 60);
   r.pipes.forEach((p, i) => {
-    const q = reg(p.P);
-    const foot = m([r.pipes[0].P[0] + r.u[0] * p.x, r.pipes[0].P[1] + r.u[1] * p.x]);
-    g += `<line x1="${foot[0]}" y1="${foot[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#ffb74d" stroke-opacity=".5" vector-effect="non-scaling-stroke"/>`;
-    const rot = (p.alpha * 180 / Math.PI) * flip;
-    g += `<rect x="${q[0] - r.pipe / 2}" y="${q[1] - r.pipe / 2}" width="${r.pipe}" height="${r.pipe}" fill="#ff9800" transform="rotate(${rot} ${q[0]} ${q[1]})"/>`;
-    const lab = reg([p.P[0] + r.v[0] * fs * 1.6, p.P[1] + r.v[1] * fs * 1.6]);
-    g += `<text x="${lab[0]}" y="${lab[1] + fs * 0.3}" font-size="${fs * 0.8}" fill="#ffb74d" text-anchor="middle">${i + 1}</text>`;
+    const q = reg(p.P), hb = p.hb - phi;
+    g += `<line x1="${q[0]}" y1="0" x2="${q[0]}" y2="${q[1]}" stroke="#ffb74d" stroke-opacity=".45" vector-effect="non-scaling-stroke"/>`;
+    g += `<rect x="${q[0] - r.pipe / 2}" y="${q[1] - r.pipe / 2}" width="${r.pipe}" height="${r.pipe}" fill="${p.border ? '#ff5252' : '#ff9800'}" transform="rotate(${-hb * 180 / Math.PI} ${q[0]} ${q[1]})"/>`;
+    const lx = q[0] - Math.sin(hb) * fs * 1.4, ly = q[1] - Math.cos(hb) * fs * 1.4;
+    xs.push(lx); ys.push(ly);
+    g += `<text x="${lx}" y="${ly + fs * 0.3}" font-size="${fs * 0.75}" fill="#ffb74d" text-anchor="middle">${i + 1}</text>`;
+  });
+  r.segInfo.forEach(si => {
+    const m = T([(si.P0[0] + si.P1[0]) / 2, (si.P0[1] + si.P1[1]) / 2]), h0 = si.h0 - phi;
+    const x = m[0] + Math.sin(h0) * fs * 2.4, y = -m[1] + Math.cos(h0) * fs * 2.4;
+    xs.push(x); ys.push(y);
+    g += `<text x="${x}" y="${y}" font-size="${fs * 0.8}" fill="#90caf9" text-anchor="middle">구간${si.si + 1}</text>`;
   });
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
   const M = Math.max(maxX - minX, maxY - minY), pad = M * 0.05;
-  g += `<text x="${(minX + maxX) / 2}" y="${maxY + pad * 0.9}" font-size="${fs}" fill="#888" text-anchor="middle">▼ 관람측</text>`;
-  return `<div class="svgbox"><svg viewBox="${minX - pad} ${minY - pad} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad + fs}">${g}</svg></div>
-    <div class="legend"><span><i style="background:#4fc3f7"></i>스크린 앞면</span><span><i style="background:#ff9800"></i>파이프</span><span><i style="background:#bbb"></i>기준선(현)</span></div>`;
+  g += `<text x="${(minX + maxX) / 2}" y="${maxY + pad * 0.9 + fs}" font-size="${fs}" fill="#888" text-anchor="middle">▼ 관람측</text>`;
+  g = `<text x="${(minX + maxX) / 2}" y="${minY - pad * 0.4}" font-size="${fs * 0.8}" fill="#666" text-anchor="middle">▲ 벽쪽</text>` + g;
+  return `<div class="svgbox"><svg viewBox="${minX - pad} ${minY - pad - fs} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad + fs * 2.2}">${g}</svg></div>
+    <div class="legend"><span><i style="background:#4fc3f7"></i>스크린 앞면</span><span><i style="background:#ff9800"></i>파이프</span><span><i style="background:#ff5252"></i>구간 경계 파이프</span><span><i style="background:#bbb"></i>기준선</span></div>`;
 }
 
 function renderArc() {
   const r = computeArc(state);
   if (r.error) { $('#results').innerHTML = `<div class="card st-err">${esc(r.error)}</div>`; return; }
   const pipe = r.pipe, B = r.Bl;
-  const yDir = r.concave ? '벽쪽(+)' : '관람측(+)';
+  const flexSegs = r.segInfo.filter(si => si.isArc && si.sg.kind === 'flex');
   let h = `<div class="card"><h2>곡면 산출 결과</h2>
     <div class="summary-grid">
-      ${box('총 각도', `${deg(r.Th)}°`)}
-      ${box(r.kind === 'flex' ? '스크린 호 길이' : '캐비넷 폭 합', `${f(r.totalW)} mm`)}
-      ${box('스크린 앞면 현(직선) 길이', `${f(r.screenChord)} mm`)}
-      ${box('스크린 앞면 휨 깊이(새지타)', `${f(r.screenSag)} mm`)}
+      ${box('구간', `${r.segInfo.length}개 · ${r.segInfo.map(si => si.isArc ? (si.sgn < 0 ? '오목' : '볼록') : '평면').join('+')}`)}
+      ${box('스크린 전개 길이', `${f(r.totalW)} mm`)}
+      ${box('기준선(양끝 파이프) 길이', `${f(r.chordP)} mm`)}
+      ${box('앞뒤 폭 (전체 깊이)', `${f(r.depthRange)} mm`)}
       ${box('세로 높이 (캐비넷)', `${f(B.C)} mm`)}
       ${box('파이프 1본 길이(세로 파이프)', `${f(B.C)} mm`, 'highlight')}
       ${stBox('하단', B.stS)}${stBox('상단', B.stE)}
     </div>
     ${r.warns.length ? `<ul class="alerts" style="margin-top:8px">${r.warns.map(w => `<li class="st-${w.lv}">● ${esc(w.tx)}</li>`).join('')}</ul>` : ''}
     ${arcSVG(r)}
-    <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'}) — 기준선 = 1번~마지막 파이프 중심 연결 직선</h3>
-    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>기준선 따라 X</th><th>기준선에서 ${yDir}</th><th>${r.kind === 'poly' ? '꺾임각' : '각도'}</th></tr></thead><tbody>
-      ${r.pipes.map(p => `<tr><td>${p.index}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.x)}</td><td class="highlight">${f(p.y)}</td><td>${r.kind === 'poly' ? (p.turn != null ? deg(p.turn) + '°' : '-') : deg(p.alpha + r.Th / 2) + '°'}</td></tr>`).join('')}
+    <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th><th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
+      ${r.pipes.map(p => `<tr${p.border ? ' style="background:#3a2020"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td><td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? f(Math.abs(p.turn) * 180 / Math.PI) + '°' : '-'}</td></tr>`).join('')}
     </tbody></table></div>
-    <div class="note">기준선 길이 ${f(r.chordP)} mm. 바닥에 1번·마지막 파이프 중심을 찍고 실을 띄운 뒤, X 위치에서 직각으로 Y만큼 ${r.concave ? '벽쪽' : '앞쪽'}에 파이프 중심을 찍으면 됩니다.</div>
-    ${r.kind === 'flex' ? `<h3>가로 벤딩 파이프 규격</h3>
-    <div class="table-container"><table><thead><tr><th>레이어</th><th>중심 반경</th><th>호 길이(절단)</th><th>현 길이</th><th>휨 깊이</th></tr></thead><tbody>
-      <tr><td>1열 (스크린 바로 뒤)</td><td class="highlight">${f(r.layer1.r)}</td><td>${f(r.layer1.arc)}</td><td>${f(r.layer1.chord)}</td><td>${f(r.layer1.sag)}</td></tr>
-      <tr><td>2열 (1열 파이프 뒤)</td><td class="highlight">${f(r.layer2.r)}</td><td>${f(r.layer2.arc)}</td><td>${f(r.layer2.chord)}</td><td>${f(r.layer2.sag)}</td></tr>
+    <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
+    ${flexSegs.length ? `<h3>가로 벤딩 파이프 규격 (구간별)</h3>
+    <div class="table-container"><table><thead><tr><th>구간</th><th>레이어</th><th>중심 반경</th><th>호 길이(절단)</th><th>현 길이</th><th>휨 깊이</th></tr></thead><tbody>
+      ${flexSegs.map(si => [['1열', si.l1], ['2열', si.l2]].map(([n, l], k) => `<tr>${k === 0 ? `<td rowspan="2">${esc(segName(si.sg, si.si))}<br><small>${f(si.Th * 180 / Math.PI)}°</small></td>` : ''}<td>${n}</td><td class="highlight">${f(l.r)}</td><td>${f(l.arc)}</td><td>${f(l.chord)}</td><td>${f(l.sag)}</td></tr>`).join('')).join('')}
     </tbody></table></div>
-    <div class="note">${state.arc.dir === 'h' ? '가로 벤딩 파이프가 주 파이프 → 1열 반경으로 벤딩, 세로 파이프는 그 뒤(2열)에 위 먹매김 위치로 설치.' : '세로 직관 파이프가 주 파이프(1열) → 가로 연결 파이프는 2열 반경으로 벤딩.'} 호 길이는 스크린 양끝 기준이며 여유 절단분은 별도.</div>`
-    : `<div class="note">평판 캐비넷: 가로 파이프는 조인트 위치에서 표의 꺾임각만큼 꺾어 용접하거나, 캐비넷별로 끊어 설치합니다.</div>`}
+    <div class="note">${state.arc.dir === 'h' ? '가로 벤딩 파이프(1열)를 구간마다 해당 반경으로 벤딩하고, 평면 구간은 직관으로 잇습니다. 세로 파이프는 그 뒤(2열).' : '세로 직관 파이프가 1열 → 가로 연결 파이프는 2열 반경으로 구간마다 벤딩.'} 오목·볼록이 바뀌는 곳은 벤딩 방향이 반대입니다. 호 길이는 구간 양끝 기준, 여유 절단분 별도.</div>` : ''}
     <h3>가로 파이프 높이 (바닥 기준)${state.arc.dir === 'h' ? ' — 주 파이프' : ' — 보조'}</h3>
     <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심 (하단에서)</th><th>중심 (상단에서)</th><th>설치 구간</th></tr></thead><tbody>
       ${(state.arc.dir === 'h' ? B.pipes : [B.pipes[0], B.pipes[B.pipes.length - 1]].filter(Boolean)).map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(B.Lraw - p.c)}</td><td>${f(p.c - pipe / 2)} ~ ${f(p.c + pipe / 2)}</td></tr>`).join('')}
@@ -1133,7 +1174,7 @@ function renderPrintHead() {
     rows = `<table><thead><tr><th>면</th><th>벽 길이×높이</th><th>가로 구성</th><th>세로 구성</th><th>다음 코너</th></tr></thead><tbody>${rows}</tbody></table>`;
   } else {
     const a = state.arc;
-    rows = `<table><tbody><tr><td>${a.shape === 'concave' ? '오목' : '볼록'} / ${a.kind === 'flex' ? '플렉시블' : '평판 꺾음'}</td><td>R ${f(num(a.R))}</td><td>가로 ${L(a.cols)}</td><td>세로 ${L(a.rows)}</td><td>높이 ${f(num(a.H))}</td></tr></tbody></table>`;
+    rows = `<table><thead><tr><th>구간</th><th>가로 구성</th></tr></thead><tbody>${arcSegs(a).map((sg, i) => `<tr><td>${esc(segName(sg, i))}</td><td>${L(sg.cols)}</td></tr>`).join('')}<tr><td>세로 · 높이</td><td>${L(a.rows)} · 높이 ${f(num(a.H))}</td></tr></tbody></table>`;
   }
   $('#printHead').innerHTML = `<h1>LED 프레임 파이프 위치 — ${esc(state.projectName || '(현장 이름 없음)')}</h1>
     <div style="font-size:.8rem">출력 ${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} · 가이드삼정 김성혁 · v${APP_VERSION}<br>
@@ -1212,6 +1253,9 @@ document.addEventListener('click', e => {
       delete p[name]; storeProjects(p); toast('삭제됨'); break;
     }
     case 'projNew': if (!confirm('새 현장을 시작할까요? (저장 안 한 입력은 사라집니다)')) return; state = defaultState(); break;
+    case 'arcPreset': state.arc.segs = ARC_PRESETS[d.key].segs(); break;
+    case 'addSeg': { const sg = arcSegs(state.arc); state.arc.segs = sg; const last = sg[sg.length - 1]; sg.push(mkSeg('arc', last.shape === 'concave' ? 'convex' : 'concave', last.kind, last.R || 2500, [it(last.cols[0]?.s || 320, 6)])); break; }
+    case 'delSeg': { const sg = arcSegs(state.arc); if (sg.length <= 1) return; sg.splice(+d.idx, 1); state.arc.segs = sg; break; }
     case 'share': shareLink(); return;
     case 'print': renderPrintHead(); window.print(); return;
     case 'install': if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; renderToolbar(); }); } return;
