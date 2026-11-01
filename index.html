@@ -6,6 +6,10 @@
 <title>LED 프레임 파이프 계산기</title>
 <meta name="description" content="LED 캐비넷 프레임(각파이프) 위치 계산기 - 평면·ㄱ·ㄷ·천장/바닥·곡면" />
 <meta name="theme-color" content="#1e1e1e" />
+<script>
+  // 저장된 테마 → 없으면 기기 설정 따라감
+  (function () { try { var t = localStorage.getItem('ledFrameCalc.theme'); if (!t) t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; document.documentElement.dataset.theme = t; } catch (e) {} })();
+</script>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -13,85 +17,102 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="LED프레임" />
 <style>
-  :root {
-    --primary: #1976d2; --primary-dark: #115293; --bg: #1e1e1e; --card-bg: #2d2d2d;
-    --text: #f0f0f0; --border: #444; --accent: #ff9800; --input-bg: #1e1e1e;
-    --ok: #81c784; --warn: #ffb74d; --err: #ef5350; --info: #90caf9;
+  :root, [data-theme="dark"] {
+    --primary: #1976d2; --bg: #1e1e1e; --card-bg: #2d2d2d; --card-bg2: #252525;
+    --text: #f0f0f0; --text2: #dddddd; --muted: #9e9e9e; --border: #444; --head: #90caf9;
+    --accent: #ff9800; --input-bg: #1e1e1e; --btn: #3a3a3a; --th: #383838; --tab: #2a2a2a; --tab-text: #bbb;
+    --corner-bg: #1f2a30; --corner-line: #4fc3f7; --alert-line: #383838; --row-hi: #3a2020;
+    --ok: #81c784; --warn: #ffb74d; --err: #ef5350; --info: #90caf9; --shadow: rgba(0,0,0,.5);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 10px; line-height: 1.4; }
+  [data-theme="light"] {
+    --primary: #1565c0; --bg: #eef1f5; --card-bg: #ffffff; --card-bg2: #f6f8fb;
+    --text: #1b1f24; --text2: #333a44; --muted: #6b7280; --border: #d3d9e1; --head: #1565c0;
+    --accent: #d84f00; --input-bg: #ffffff; --btn: #eef1f5; --th: #eef2f7; --tab: #e3e8ee; --tab-text: #4b5563;
+    --corner-bg: #eaf5fb; --corner-line: #0288d1; --alert-line: #e5e7eb; --row-hi: #fde8e8;
+    --ok: #2e7d32; --warn: #b45309; --err: #c62828; --info: #1565c0; --shadow: rgba(0,0,0,.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  body { background: var(--bg); color: var(--text); padding: 10px 10px 80px; line-height: 1.4; transition: background .2s, color .2s; }
   .container { max-width: 600px; margin: 0 auto; }
-  .card { background: var(--card-bg); border-radius: 8px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
-  h1 { font-size: 1.15rem; text-align: center; margin-bottom: 12px; color: #90caf9; }
+  .card { background: var(--card-bg); border-radius: 10px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
+  [data-theme="light"] .card { box-shadow: 0 1px 3px var(--shadow); }
+  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  h1 { font-size: 1.1rem; color: var(--head); flex: 1; line-height: 1.3; }
+  .theme-btn { flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1.2rem; cursor: pointer; }
   h2 { font-size: 0.95rem; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-  .author { font-size: 0.68rem; color: #9e9e9e; font-weight: 400; margin-left: 4px; white-space: nowrap; }
+  .author { font-size: 0.68rem; color: var(--muted); font-weight: 400; margin-left: 4px; white-space: nowrap; }
   .manual { margin-bottom: 12px; }
-  .manual summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; color: #90caf9; list-style: none; }
+  .manual summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--head); list-style: none; }
   .manual summary::-webkit-details-marker { display: none; }
   .manual summary::after { content: ' ▼'; font-size: 0.7rem; }
   .manual[open] summary::after { content: ' ▲'; }
-  .manual h4 { font-size: 0.85rem; color: #ffb74d; margin: 14px 0 4px; }
-  .manual p, .manual li { font-size: 0.8rem; color: #ddd; line-height: 1.6; }
+  .manual h4 { font-size: 0.85rem; color: var(--warn); margin: 14px 0 4px; }
+  .manual p, .manual li { font-size: 0.82rem; color: var(--text2); line-height: 1.6; }
   .manual ol, .manual ul { padding-left: 18px; }
-  .manual b { color: #fff; }
-  .manual .tip { background: #1f2a30; border-left: 3px solid #4fc3f7; padding: 6px 8px; margin: 6px 0; font-size: 0.78rem; color: #cfd8dc; }
+  .manual b { color: var(--text); }
+  .manual .tip { background: var(--corner-bg); border-left: 3px solid var(--corner-line); padding: 6px 8px; margin: 6px 0; font-size: 0.8rem; color: var(--text2); }
   .cornerfig { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
   .cornerfig svg { width: 120px; height: 120px; flex-shrink: 0; background: #141414; border-radius: 6px; }
-  .cornerfig .desc { font-size: 0.76rem; color: #cfd8dc; line-height: 1.5; }
-  h3 { font-size: 0.85rem; margin: 12px 0 6px; color: #90caf9; }
+  .cornerfig .desc { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
+  h3 { font-size: 0.88rem; margin: 14px 0 6px; color: var(--head); }
   .form-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; }
-  .form-group label { font-size: 0.85rem; font-weight: 500; flex: 1; min-width: 0; }
+  .form-group label { font-size: 0.86rem; font-weight: 500; flex: 1; min-width: 0; }
   .input-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-  input, select { padding: 6px 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: var(--input-bg); color: var(--text); }
-  .form-group input[type=number], .form-group input[type=text] { width: 100px; text-align: right; }
+  /* 16px 이상이어야 아이폰에서 입력할 때 화면이 확대되지 않음 */
+  input, select { padding: 8px 9px; font-size: 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); }
+  input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: var(--primary); }
+  .form-group input[type=number], .form-group input[type=text] { width: 104px; text-align: right; }
   .form-group select { max-width: 210px; }
-  input[type=checkbox] { width: 18px; height: 18px; }
-  .form-hint { font-size: 0.72rem; color: #9e9e9e; margin-top: -4px; margin-bottom: 8px; text-align: right; }
-  .unit { font-size: 0.8rem; color: #aaa; min-width: 24px; }
+  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--primary); }
+  .form-hint { font-size: 0.74rem; color: var(--muted); margin-top: -4px; margin-bottom: 8px; text-align: right; }
+  .unit { font-size: 0.8rem; color: var(--muted); min-width: 24px; }
   .dynamic-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
   .dynamic-row input { flex: 1; min-width: 0; text-align: right; }
-  .dynamic-row .x { color: #888; font-size: 0.8rem; }
-  .btn { padding: 7px 12px; font-size: 0.82rem; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; background: #3a3a3a; color: #f0f0f0; }
-  .btn.sm { padding: 4px 8px; font-size: 0.75rem; }
-  .btn.danger { background: #b71c1c; border: none; }
-  .btn.del { width: 52px; flex-shrink: 0; background: #d32f2f; border: none; color: #fff; padding: 6px 0; border-radius: 4px; cursor: pointer; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-  .tab { flex: 1; padding: 10px 6px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #bbb; cursor: pointer; }
+  .dynamic-row .x { color: var(--muted); font-size: 0.85rem; }
+  .btn { padding: 8px 12px; font-size: 0.84rem; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: var(--btn); color: var(--text); }
+  .btn:active { filter: brightness(.9); }
+  .btn.sm { padding: 5px 9px; font-size: 0.76rem; }
+  .btn.danger { background: #c62828; border: none; color: #fff; }
+  .btn.del { width: 52px; flex-shrink: 0; background: #d32f2f; border: none; color: #fff; padding: 9px 0; border-radius: 6px; cursor: pointer; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; position: sticky; top: 0; z-index: 20; padding: 6px 0; background: var(--bg); }
+  .tab { flex: 1; padding: 10px 6px; font-size: 0.88rem; font-weight: 600; border-radius: 8px; border: 1px solid var(--border); background: var(--tab); color: var(--tab-text); cursor: pointer; }
   .tab.on { background: var(--primary); color: #fff; border-color: var(--primary); }
   .presets { display: flex; flex-wrap: wrap; gap: 6px; }
   .presets .btn { flex: 1 1 30%; }
-  .corner { background: #1f2a30; border: 1px dashed #4fc3f7; border-radius: 8px; padding: 10px 12px; margin: -4px 0 12px; }
-  .corner .ttl { font-size: 0.8rem; color: #4fc3f7; margin-bottom: 6px; font-weight: 600; }
+  .corner { background: var(--corner-bg); border: 1px dashed var(--corner-line); border-radius: 10px; padding: 10px 12px; margin: -4px 0 12px; }
+  .corner .ttl { font-size: 0.82rem; color: var(--corner-line); margin-bottom: 6px; font-weight: 600; }
   .face-head { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
   .face-head input { flex: 1; font-weight: 600; }
-  .sub { font-size: 0.78rem; color: #aaa; margin: 10px 0 6px; }
-  .check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; }
+  .sub { font-size: 0.8rem; color: var(--muted); margin: 10px 0 6px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; font-weight: 600; }
   .table-container { overflow-x: auto; margin-top: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: center; }
-  th, td { border: 1px solid var(--border); padding: 6px 4px; }
-  th { background: #383838; font-weight: 600; }
-  .highlight { color: var(--accent); font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: center; }
+  th, td { border: 1px solid var(--border); padding: 7px 4px; }
+  th { background: var(--th); font-weight: 600; }
+  .highlight { color: var(--accent); font-weight: bold; font-size: 0.92rem; }
   .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-  .summary-box { background: #252525; border: 1px solid var(--border); border-radius: 4px; padding: 7px 5px; text-align: center; }
-  .summary-box .title { font-size: 0.7rem; color: #aaa; }
-  .summary-box .val { font-size: 0.88rem; font-weight: bold; color: #90caf9; margin-top: 2px; }
+  .summary-box { background: var(--card-bg2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 5px; text-align: center; }
+  .summary-box .title { font-size: 0.72rem; color: var(--muted); }
+  .summary-box .val { font-size: 0.9rem; font-weight: bold; color: var(--head); margin-top: 2px; }
   .st-ok { color: var(--ok) !important; } .st-warn { color: var(--warn) !important; }
   .st-err { color: var(--err) !important; } .st-info { color: var(--info) !important; }
-  .svgbox { background: #141414; border-radius: 6px; margin-top: 8px; padding: 4px; }
+  .svgbox { background: #141414; border-radius: 8px; margin-top: 8px; padding: 4px; }
   .svgbox svg { width: 100%; height: auto; display: block; max-height: 520px; }
-  .alerts { list-style: none; font-size: 0.8rem; }
-  .alerts li { padding: 4px 0; border-bottom: 1px solid #383838; }
-  .note { font-size: 0.75rem; color: #9e9e9e; margin-top: 6px; line-height: 1.5; }
-  .legend { font-size: 0.72rem; color: #aaa; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .alerts { list-style: none; font-size: 0.82rem; }
+  .alerts li { padding: 4px 0; border-bottom: 1px solid var(--alert-line); }
+  .note { font-size: 0.77rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .legend { font-size: 0.74rem; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 10px; }
   .legend i { display: inline-block; width: 12px; height: 4px; vertical-align: middle; margin-right: 3px; }
+  .fab { position: fixed; right: 14px; bottom: 18px; z-index: 30; border: none; border-radius: 26px; padding: 12px 18px; font-size: 0.9rem; font-weight: 700; background: var(--primary); color: #fff; box-shadow: 0 4px 14px var(--shadow); cursor: pointer; }
+  .fab .badge { display: inline-block; margin-left: 6px; background: #fff; color: #c62828; border-radius: 10px; padding: 0 7px; font-size: 0.78rem; }
   .toolbar .btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .toolbar .btnrow .btn { flex: 1 1 22%; padding: 9px 4px; }
   .toolbar .btn.pri { background: var(--primary); border-color: var(--primary); }
   .toolbar .loadrow { display: flex; gap: 6px; margin-top: 8px; }
   .toolbar .loadrow select { flex: 1; min-width: 0; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 0.85rem; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; text-align: center; }
+  .toast { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 0.85rem; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; text-align: center; }
   .toast.on { opacity: 1; }
-  .ver { font-size: 0.7rem; color: #777; text-align: center; margin-top: 6px; }
+  .ver { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 6px; }
   .print-only { display: none; }
   .print-head h1 { color: #000; font-size: 1.1rem; text-align: left; margin-bottom: 4px; }
   .print-head table { margin-top: 6px; }
@@ -99,7 +120,7 @@
     @page { size: A4; margin: 10mm; }
     body { background: #fff; color: #000; padding: 0; }
     .container { max-width: none; }
-    .tabs, #form, .manual, .no-print, .toast { display: none !important; }
+    .tabs, #form, .manual, .no-print, .toast, .fab, .topbar { display: none !important; }
     .print-only { display: block; }
     .card { background: #fff; border: 1px solid #aaa; color: #000; }
     h2 { color: #000; } h3 { color: #0d47a1; }
@@ -118,7 +139,7 @@
 </head>
 <body>
 <div class="container">
-  <h1 class="no-print">LED 프레임 파이프 설치 계산기 <small class="author">가이드삼정 김성혁</small></h1>
+  <div class="topbar no-print"><h1>LED 프레임 파이프 설치 계산기 <small class="author">가이드삼정 김성혁</small></h1><button class="theme-btn" data-act="theme" id="themeBtn" aria-label="밝기 모드 전환"></button></div>
   <div id="printHead" class="print-only print-head"></div>
   <div class="tabs">
     <button class="tab" data-act="mode" data-mode="chain">면 조합<br><small>평면 · ㄱ · ㄷ · 천장/바닥</small></button>
@@ -229,6 +250,7 @@
 
     <h4>업데이트 내역</h4>
     <ul>
+      <li><b>v2.6</b>: 밝은/어두운 모드, mm 정수·각도 0.5° 표시, 결과 바로가기 버튼, 입력 편의 개선</li>
       <li><b>v2.5</b>: 곡면을 구간으로 이어 붙이기 (곡면+평면+곡면, 오목+볼록+오목 등)</li>
       <li><b>v2.4</b>: 내측 코너 겹침을 픽셀 단위(피치 × 1~3픽셀)로 계산</li>
       <li><b>v2.3</b>: 웹앱(홈 화면 설치·오프라인), 현장별 저장, 공유 링크, 인쇄·PDF</li>
@@ -243,6 +265,7 @@
   <div id="results"></div>
   <div class="no-print" style="text-align:center;margin:16px 0 30px"><button class="btn sm" data-act="reset">전체 초기화</button><div class="ver" id="ver"></div></div>
   <div id="toast" class="toast"></div>
+  <button id="fab" class="fab no-print" data-act="jump">결과 보기 ↓</button>
 </div>
 
 <script>
@@ -252,7 +275,9 @@
 const $ = s => document.querySelector(s);
 const num = v => (v === '' || v == null || isNaN(+v)) ? 0 : +v;
 const r1 = n => { const v = Math.round(n * 10) / 10; return Object.is(v, -0) ? 0 : v; };
-const f = n => String(r1(n));
+const f = n => { const v = Math.round(n); return String(Object.is(v, -0) ? 0 : v); }; // mm: 정수
+const f1 = n => String(r1(n)); // 소수 1자리 (피치·겹침 등)
+const fa = rad => { const v = Math.round(Math.abs(rad) * 180 / Math.PI * 2) / 2; return `${v}°`; }; // 각도: 0.5° 단위
 const deg = rad => r1(rad * 180 / Math.PI);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -333,7 +358,7 @@ function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.6';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -423,9 +448,9 @@ function endStatus(s, e, tol) {
       const ov = s.ov ?? s.t;
       if (e < -tol) return { lv: 'err', tx: `${who} 벽 간섭 ${f(-e)}mm` };
       if (d > ov + tol) return { lv: 'warn', tx: `코너 틈 ${f(d - ov)}mm (${who} 스크린 옆이 벌어짐)` };
-      if (d > tol) return { lv: 'warn', tx: `겹침 부족: ${who} 앞면 뒤로 ${f(ov - d)}mm만 겹침 (목표 ${f(ov)}mm)` };
-      if (d < -tol) return { lv: 'info', tx: `${who} 스크린 뒤로 ${f(ov - d)}mm 겹침 (목표 ${f(ov)}mm보다 ${f(-d)}mm 더 가려짐)` };
-      return { lv: 'ok', tx: `코너 정합 (${who} 앞면 뒤로 ${f(ov)}mm 겹침)` };
+      if (d > tol) return { lv: 'warn', tx: `겹침 부족: ${who} 앞면 뒤로 ${f1(ov - d)}mm만 겹침 (목표 ${f1(ov)}mm)` };
+      if (d < -tol) return { lv: 'info', tx: `${who} 스크린 뒤로 ${f1(ov - d)}mm 겹침 (목표 ${f1(ov)}mm보다 ${f(-d)}mm 더 가려짐)` };
+      return { lv: 'ok', tx: `코너 정합 (${who} 앞면 뒤로 ${f1(ov)}mm 겹침)` };
     }
     case 'out-cover':
       if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm (${who} 측면 노출)` };
@@ -684,7 +709,7 @@ function computeArc(st) {
     }
   });
   // 구간 경계에서 평판 꺾음이 섞이면 꺾임 발생 안내
-  pipes.filter(p => p.border && Math.abs(p.turn) > 0.002).forEach(p => warns.push({ lv: 'info', tx: `구간 ${p.si} 경계에서 ${f(Math.abs(p.turn) * 180 / Math.PI)}° 꺾임` }));
+  pipes.filter(p => p.border && Math.abs(p.turn) > 0.002).forEach(p => warns.push({ lv: 'info', tx: `구간 ${p.si} 경계에서 ${fa(p.turn)} 꺾임` }));
 
   const Bl = layout1D({ Lraw: num(a.H), sizes: expand(a.rows).reverse(), sS: { kind: a.bottomEnd }, sE: { kind: a.topEnd },
     align: a.alignB, manual: a.manB, pipe, shift, tol, names: NAMES_ROW });
@@ -720,12 +745,12 @@ function commonForm() {
     ${c.depthMode === 'recess'
       ? field('매립 마감 유효 깊이 D', numIn('common.D', c.D), 'mm') + field('스크린 깊이 조정', numIn('common.adj', c.adj), 'mm') + hint('-2: 2mm 안으로 매립, +2: 2mm 돌출, 0: 플랫')
       : field('벽 ~ 파이프 뒷면 이격', numIn('common.standoff', c.standoff), 'mm') + hint('브라켓/앵커 등 파이프 뒤 공간')}
-    ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc" style="color:#90caf9"></b> (코너 계산의 핵심값)')}
+    ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc" style="color:var(--head)"></b> (코너 계산의 핵심값)')}
     ${field('중간 조인트 편심 (좌/하 -, 우/상 +)', numIn('common.shift', c.shift), 'mm')}
     ${hint('양 끝단 파이프는 고정, 중간 조인트 파이프만 이동')}
     ${field('픽셀 피치 (P)', numIn('common.pitch', c.pitch), 'mm')}
     ${field('내측 코너 겹침 픽셀 수', numIn('common.ovPx', c.ovPx), 'px')}
-    ${hint('→ 덮는 면이 상대 스크린 앞면 뒤로 <b id="ovcalc" style="color:#90caf9"></b> 겹침 (보통 1~3픽셀)')}
+    ${hint('→ 덮는 면이 상대 스크린 앞면 뒤로 <b id="ovcalc" style="color:var(--head)"></b> 겹침 (보통 1~3픽셀)')}
     ${field('코너·여백 허용 오차 ±', numIn('common.tol', c.tol), 'mm')}
   </div>`;
 }
@@ -733,7 +758,7 @@ function commonForm() {
 function faceForm(fc, i, n) {
   const p = `chain.faces.${i}`;
   return `<div class="card">
-    <div class="face-head"><span style="font-size:.8rem;color:#90caf9">면 ${i + 1}</span>${txtIn(p + '.name', fc.name)}
+    <div class="face-head"><span style="font-size:.8rem;color:var(--head)">면 ${i + 1}</span>${txtIn(p + '.name', fc.name)}
       ${n > 1 ? `<button class="btn sm danger" data-act="delFace" data-idx="${i}">면 삭제</button>` : ''}</div>
     ${field('벽 길이 (구조면 기준 실측)', numIn(p + '.L', fc.L), 'mm')}
     ${field('높이 (바닥~천장 또는 개구부)', numIn(p + '.H', fc.H), 'mm')}
@@ -800,11 +825,11 @@ function cornerFig(cn, A, B) {
   else {
     const cov = covA ? A : B, but = covA ? B : A;
     desc = cn.type === 'in'
-      ? `<b>${esc(cov)}</b> 스크린이 코너까지 가서 <b>${esc(but)}</b> 스크린 앞면 뒤로 <b>${f(cornerOverlap(state.common))}mm(${num(state.common.ovPx)}픽셀)</b>만 겹치고, ${esc(but)} 스크린은 ${esc(cov)} 스크린 <b>앞면에 붙여</b> 끝납니다.`
+      ? `<b>${esc(cov)}</b> 스크린이 코너까지 가서 <b>${esc(but)}</b> 스크린 앞면 뒤로 <b>${f1(cornerOverlap(state.common))}mm(${num(state.common.ovPx)}픽셀)</b>만 겹치고, ${esc(but)} 스크린은 ${esc(cov)} 스크린 <b>앞면에 붙여</b> 끝납니다.`
       : `<b>${esc(cov)}</b> 스크린이 모서리 밖으로 뻗어 <b>${esc(but)}</b> 스크린 옆면을 가립니다. ${esc(but)} 스크린은 ${esc(cov)} 뒤에 붙습니다.`;
-    desc += `<br><span style="color:#90caf9">밝은 파랑 = 끝까지 가는(덮는) 면</span>`;
+    desc += `<br><span style="color:var(--head)">밝은 파랑 = 끝까지 가는(덮는) 면</span>`;
     const ch = state.chain, bi = baseIndex(ch), bn = ch.faces[bi]?.name;
-    if (cn.type === 'in' && (bn === A || bn === B) && cov !== bn) desc += `<br><span style="color:#ffb74d">※ 기준 면(${esc(bn)})을 먼저 시공하면 "${esc(bn)} 덮음"이 맞습니다</span>`;
+    if (cn.type === 'in' && (bn === A || bn === B) && cov !== bn) desc += `<br><span style="color:var(--warn)">※ 기준 면(${esc(bn)})을 먼저 시공하면 "${esc(bn)} 덮음"이 맞습니다</span>`;
   }
   return `<div class="cornerfig"><svg viewBox="0 0 124 124">${g}</svg><div class="desc">${desc}</div></div>`;
 }
@@ -869,7 +894,7 @@ function arcForm() {
   </div>`;
   segs.forEach((sg, i) => {
     const q = `${p}.segs.${i}`;
-    h += `<div class="card"><div class="face-head"><span style="font-size:.85rem;color:#90caf9;font-weight:700">구간 ${i + 1}</span><span style="flex:1"></span>
+    h += `<div class="card"><div class="face-head"><span style="font-size:.85rem;color:var(--head);font-weight:700">구간 ${i + 1}</span><span style="flex:1"></span>
       ${segs.length > 1 ? `<button class="btn sm danger" data-act="delSeg" data-idx="${i}">구간 삭제</button>` : ''}</div>
       ${field('형태', sel(q + '.type', sg.type, [['arc', '곡면'], ['flat', '평면 (직선)']]))}
       ${sg.type === 'arc' ? field('곡면 방향', sel(q + '.shape', sg.shape, [['concave', '오목 (관람자 쪽으로 감쌈)'], ['convex', '볼록 (바깥으로 튀어나옴)']]))
@@ -1039,7 +1064,7 @@ function pipeTable(r) {
     return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>중심<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>중심<br><small>${esc(farRef)}에서</small></th></tr></thead><tbody>
       ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff)}</td><td>${f(p.dw)}</td><td>${f(L.Lraw - p.dw)}</td></tr>`).join('')}
     </tbody></table></div>
-    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 주황색 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f(h)}mm.</div>`;
+    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 주황색 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f1(h)}mm.</div>`;
   }
   const ref = r.main === 'A' ? [r.refs.aS, r.refs.aE] : [r.refs.bS, r.refs.bE];
   const h = num(state.common.pipe) / 2;
@@ -1054,7 +1079,7 @@ function faceResult(r, pipe) {
   const othRef = r.main === 'A' ? r.refs.bS : r.refs.aS;
   const dp = r.depth;
   const nPipe = (r.main === 'A' ? r.A : r.B).pipes.length;
-  const ord = r.order ? `<small style="color:${r.isBase ? '#81c784' : '#ffb74d'};font-weight:400"> · 시공 ${r.order}순위${r.isBase ? ' (기준 면)' : ` (${esc(r.measure.nbName)} 다음)`}</small>` : '';
+  const ord = r.order ? `<small style="color:${r.isBase ? 'var(--ok)' : 'var(--warn)'};font-weight:400"> · 시공 ${r.order}순위${r.isBase ? ' (기준 면)' : ` (${esc(r.measure.nbName)} 다음)`}</small>` : '';
   return `<div class="card"><h2><span>${esc(r.title)}${ord}</span><span class="highlight" style="font-size:.85rem">${esc(r.mainLabel.split(' (')[0])} ${nPipe}본</span></h2>
     <div class="summary-grid">
       ${box(`캐비넷 외경 (${r.axis.A}×${r.axis.B})`, `${f(r.A.C)} × ${f(r.B.C)}`)}
@@ -1147,12 +1172,12 @@ function renderArc() {
     ${arcSVG(r)}
     <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
     <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th><th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
-      ${r.pipes.map(p => `<tr${p.border ? ' style="background:#3a2020"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td><td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? f(Math.abs(p.turn) * 180 / Math.PI) + '°' : '-'}</td></tr>`).join('')}
+      ${r.pipes.map(p => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td><td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
     </tbody></table></div>
     <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
     ${flexSegs.length ? `<h3>가로 벤딩 파이프 규격 (구간별)</h3>
     <div class="table-container"><table><thead><tr><th>구간</th><th>레이어</th><th>중심 반경</th><th>호 길이(절단)</th><th>현 길이</th><th>휨 깊이</th></tr></thead><tbody>
-      ${flexSegs.map(si => [['1열', si.l1], ['2열', si.l2]].map(([n, l], k) => `<tr>${k === 0 ? `<td rowspan="2">${esc(segName(si.sg, si.si))}<br><small>${f(si.Th * 180 / Math.PI)}°</small></td>` : ''}<td>${n}</td><td class="highlight">${f(l.r)}</td><td>${f(l.arc)}</td><td>${f(l.chord)}</td><td>${f(l.sag)}</td></tr>`).join('')).join('')}
+      ${flexSegs.map(si => [['1열', si.l1], ['2열', si.l2]].map(([n, l], k) => `<tr>${k === 0 ? `<td rowspan="2">${esc(segName(si.sg, si.si))}<br><small>${fa(si.Th)}</small></td>` : ''}<td>${n}</td><td class="highlight">${f(l.r)}</td><td>${f(l.arc)}</td><td>${f(l.chord)}</td><td>${f(l.sag)}</td></tr>`).join('')).join('')}
     </tbody></table></div>
     <div class="note">${state.arc.dir === 'h' ? '가로 벤딩 파이프(1열)를 구간마다 해당 반경으로 벤딩하고, 평면 구간은 직관으로 잇습니다. 세로 파이프는 그 뒤(2열).' : '세로 직관 파이프가 1열 → 가로 연결 파이프는 2열 반경으로 구간마다 벤딩.'} 오목·볼록이 바뀌는 곳은 벤딩 방향이 반대입니다. 호 길이는 구간 양끝 기준, 여유 절단분 별도.</div>` : ''}
     <h3>가로 파이프 높이 (바닥 기준)${state.arc.dir === 'h' ? ' — 주 파이프' : ' — 보조'}</h3>
@@ -1183,9 +1208,10 @@ function renderPrintHead() {
 
 function renderResults() {
   renderPrintHead();
+  setTimeout(updateFab, 0);
   const T = commonT(state.common), el = $('#Tcalc');
   if (el) el.textContent = `${f(T)} mm`;
-  const oe = $('#ovcalc'); if (oe) oe.textContent = `${f(cornerOverlap(state.common))} mm`;
+  const oe = $('#ovcalc'); if (oe) oe.textContent = `${f1(cornerOverlap(state.common))} mm`;
   try { state.mode === 'chain' ? renderChain() : renderArc(); }
   catch (e) { $('#results').innerHTML = `<div class="card st-err">계산 오류: ${esc(e.message)}</div>`; console.error(e); }
 }
@@ -1256,6 +1282,8 @@ document.addEventListener('click', e => {
     case 'arcPreset': state.arc.segs = ARC_PRESETS[d.key].segs(); break;
     case 'addSeg': { const sg = arcSegs(state.arc); state.arc.segs = sg; const last = sg[sg.length - 1]; sg.push(mkSeg('arc', last.shape === 'concave' ? 'convex' : 'concave', last.kind, last.R || 2500, [it(last.cols[0]?.s || 320, 6)])); break; }
     case 'delSeg': { const sg = arcSegs(state.arc); if (sg.length <= 1) return; sg.splice(+d.idx, 1); state.arc.segs = sg; break; }
+    case 'theme': setTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'); return;
+    case 'jump': jumpToggle(); return;
     case 'share': shareLink(); return;
     case 'print': renderPrintHead(); window.print(); return;
     case 'install': if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; renderToolbar(); }); } return;
@@ -1263,6 +1291,29 @@ document.addEventListener('click', e => {
   }
   save(); renderForm(); renderResults();
 });
+
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('ledFrameCalc.theme', t); } catch (e) {}
+  updateThemeUI();
+}
+function updateThemeUI() {
+  const light = document.documentElement.dataset.theme === 'light';
+  const b = $('#themeBtn'); if (b) { b.textContent = light ? '🌙' : '☀️'; b.title = light ? '어두운 모드로' : '밝은 모드로'; }
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', light ? '#eef1f5' : '#1e1e1e');
+}
+// 결과 ↔ 입력 오가기 버튼
+function resultsTop() { const r = $('#results'); return r ? r.getBoundingClientRect().top + scrollY - 60 : 0; }
+function jumpToggle() { scrollTo({ top: scrollY + 200 < resultsTop() ? resultsTop() : 0, behavior: 'smooth' }); }
+function updateFab() {
+  const b = $('#fab'); if (!b) return;
+  const inResults = scrollY + 200 >= resultsTop();
+  const n = document.querySelectorAll('#results .alerts li.st-warn, #results .alerts li.st-err').length;
+  b.innerHTML = inResults ? '입력 ↑' : `결과 보기 ↓${n ? `<span class="badge">⚠ ${n}</span>` : ''}`;
+}
+addEventListener('scroll', () => { clearTimeout(updateFab._t); updateFab._t = setTimeout(updateFab, 80); }, { passive: true });
+// 숫자 칸을 누르면 기존 값 전체 선택 (바로 덮어쓰기)
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('input[type=number]')) setTimeout(() => { try { e.target.select(); } catch (_) {} }, 0); });
 
 async function shareLink() {
   const code = await encodeState(state);
@@ -1287,6 +1338,7 @@ window.addEventListener('beforeprint', renderPrintHead);
     } catch (e) { setTimeout(() => toast('공유 링크를 읽지 못했습니다'), 300); }
     history.replaceState(null, '', location.pathname + location.search);
   }
+  updateThemeUI();
   renderForm(); renderResults();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
