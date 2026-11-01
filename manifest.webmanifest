@@ -1,0 +1,16 @@
+{
+  "name": "LED 프레임 파이프 계산기",
+  "short_name": "LED프레임",
+  "description": "LED 캐비넷 프레임(각파이프) 위치 계산기 - 평면·ㄱ·ㄷ·천장/바닥·곡면",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e1e1e",
+  "theme_color": "#1e1e1e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LED 프레임 파이프 계산기</title>
+<meta name="description" content="LED 캐비넷 프레임(각파이프) 위치 계산기 - 평면·ㄱ·ㄷ·천장/바닥·곡면" />
+<meta name="theme-color" content="#1e1e1e" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="LED프레임" />
+<style>
+  :root {
+    --primary: #1976d2; --primary-dark: #115293; --bg: #1e1e1e; --card-bg: #2d2d2d;
+    --text: #f0f0f0; --border: #444; --accent: #ff9800; --input-bg: #1e1e1e;
+    --ok: #81c784; --warn: #ffb74d; --err: #ef5350; --info: #90caf9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding: 10px; line-height: 1.4; }
+  .container { max-width: 600px; margin: 0 auto; }
+  .card { background: var(--card-bg); border-radius: 8px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
+  h1 { font-size: 1.15rem; text-align: center; margin-bottom: 12px; color: #90caf9; }
+  h2 { font-size: 0.95rem; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .author { font-size: 0.68rem; color: #9e9e9e; font-weight: 400; margin-left: 4px; white-space: nowrap; }
+  .manual { margin-bottom: 12px; }
+  .manual summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; color: #90caf9; list-style: none; }
+  .manual summary::-webkit-details-marker { display: none; }
+  .manual summary::after { content: ' ▼'; font-size: 0.7rem; }
+  .manual[open] summary::after { content: ' ▲'; }
+  .manual h4 { font-size: 0.85rem; color: #ffb74d; margin: 14px 0 4px; }
+  .manual p, .manual li { font-size: 0.8rem; color: #ddd; line-height: 1.6; }
+  .manual ol, .manual ul { padding-left: 18px; }
+  .manual b { color: #fff; }
+  .manual .tip { background: #1f2a30; border-left: 3px solid #4fc3f7; padding: 6px 8px; margin: 6px 0; font-size: 0.78rem; color: #cfd8dc; }
+  .cornerfig { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
+  .cornerfig svg { width: 120px; height: 120px; flex-shrink: 0; background: #141414; border-radius: 6px; }
+  .cornerfig .desc { font-size: 0.76rem; color: #cfd8dc; line-height: 1.5; }
+  h3 { font-size: 0.85rem; margin: 12px 0 6px; color: #90caf9; }
+  .form-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; }
+  .form-group label { font-size: 0.85rem; font-weight: 500; flex: 1; min-width: 0; }
+  .input-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  input, select { padding: 6px 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 4px; background: var(--input-bg); color: var(--text); }
+  .form-group input[type=number], .form-group input[type=text] { width: 100px; text-align: right; }
+  .form-group select { max-width: 210px; }
+  input[type=checkbox] { width: 18px; height: 18px; }
+  .form-hint { font-size: 0.72rem; color: #9e9e9e; margin-top: -4px; margin-bottom: 8px; text-align: right; }
+  .unit { font-size: 0.8rem; color: #aaa; min-width: 24px; }
+  .dynamic-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .dynamic-row input { flex: 1; min-width: 0; text-align: right; }
+  .dynamic-row .x { color: #888; font-size: 0.8rem; }
+  .btn { padding: 7px 12px; font-size: 0.82rem; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; background: #3a3a3a; color: #f0f0f0; }
+  .btn.sm { padding: 4px 8px; font-size: 0.75rem; }
+  .btn.danger { background: #b71c1c; border: none; }
+  .btn.del { width: 52px; flex-shrink: 0; background: #d32f2f; border: none; color: #fff; padding: 6px 0; border-radius: 4px; cursor: pointer; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { flex: 1; padding: 10px 6px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: #bbb; cursor: pointer; }
+  .tab.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .presets .btn { flex: 1 1 30%; }
+  .corner { background: #1f2a30; border: 1px dashed #4fc3f7; border-radius: 8px; padding: 10px 12px; margin: -4px 0 12px; }
+  .corner .ttl { font-size: 0.8rem; color: #4fc3f7; margin-bottom: 6px; font-weight: 600; }
+  .face-head { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+  .face-head input { flex: 1; font-weight: 600; }
+  .sub { font-size: 0.78rem; color: #aaa; margin: 10px 0 6px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; }
+  .table-container { overflow-x: auto; margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: center; }
+  th, td { border: 1px solid var(--border); padding: 6px 4px; }
+  th { background: #383838; font-weight: 600; }
+  .highlight { color: var(--accent); font-weight: bold; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .summary-box { background: #252525; border: 1px solid var(--border); border-radius: 4px; padding: 7px 5px; text-align: center; }
+  .summary-box .title { font-size: 0.7rem; color: #aaa; }
+  .summary-box .val { font-size: 0.88rem; font-weight: bold; color: #90caf9; margin-top: 2px; }
+  .st-ok { color: var(--ok) !important; } .st-warn { color: var(--warn) !important; }
+  .st-err { color: var(--err) !important; } .st-info { color: var(--info) !important; }
+  .svgbox { background: #141414; border-radius: 6px; margin-top: 8px; padding: 4px; }
+  .svgbox svg { width: 100%; height: auto; display: block; max-height: 520px; }
+  .alerts { list-style: none; font-size: 0.8rem; }
+  .alerts li { padding: 4px 0; border-bottom: 1px solid #383838; }
+  .note { font-size: 0.75rem; color: #9e9e9e; margin-top: 6px; line-height: 1.5; }
+  .legend { font-size: 0.72rem; color: #aaa; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .legend i { display: inline-block; width: 12px; height: 4px; vertical-align: middle; margin-right: 3px; }
+  .toolbar .btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .toolbar .btnrow .btn { flex: 1 1 22%; padding: 9px 4px; }
+  .toolbar .btn.pri { background: var(--primary); border-color: var(--primary); }
+  .toolbar .loadrow { display: flex; gap: 6px; margin-top: 8px; }
+  .toolbar .loadrow select { flex: 1; min-width: 0; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 0.85rem; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; text-align: center; }
+  .toast.on { opacity: 1; }
+  .ver { font-size: 0.7rem; color: #777; text-align: center; margin-top: 6px; }
+  .print-only { display: none; }
+  .print-head h1 { color: #000; font-size: 1.1rem; text-align: left; margin-bottom: 4px; }
+  .print-head table { margin-top: 6px; }
+  @media print {
+    @page { size: A4; margin: 10mm; }
+    body { background: #fff; color: #000; padding: 0; }
+    .container { max-width: none; }
+    .tabs, #form, .manual, .no-print, .toast { display: none !important; }
+    .print-only { display: block; }
+    .card { background: #fff; border: 1px solid #aaa; color: #000; }
+    h2 { color: #000; } h3 { color: #0d47a1; }
+    .summary-box { background: #fff; border-color: #aaa; break-inside: avoid; }
+    .summary-box .title { color: #444; } .summary-box .val { color: #000; }
+    th { background: #eee; color: #000; } th, td { border-color: #aaa; color: #000; }
+    tr { break-inside: avoid; }
+    .highlight { color: #b35400 !important; }
+    .note, .legend { color: #333; }
+    .st-ok { color: #2e7d32 !important; } .st-warn { color: #b35400 !important; } .st-err { color: #c62828 !important; } .st-info { color: #1565c0 !important; }
+    .svgbox { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .svgbox svg { max-height: 120mm; }
+    .alerts li { border-color: #ddd; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="no-print">LED 프레임 파이프 설치 계산기 <small class="author">가이드삼정 김성혁</small></h1>
+  <div id="printHead" class="print-only print-head"></div>
+  <div class="tabs">
+    <button class="tab" data-act="mode" data-mode="chain">면 조합<br><small>평면 · ㄱ · ㄷ · 천장/바닥</small></button>
+    <button class="tab" data-act="mode" data-mode="arc">곡면<br><small>플렉시블 · 꺾음</small></button>
+  </div>
+  <details class="card manual">
+    <summary>📖 사용 설명서 (처음이면 꼭 읽어보세요)</summary>
+
+    <h4>1. 이 계산기가 하는 일</h4>
+    <p>LED 캐비넷 구성(폭×수량, 높이×단수)과 현장 실측값을 넣으면 <b>각파이프를 어디에 세울지(중심 위치)</b>를 줄자로 바로 잴 수 있는 숫자로 뽑아줍니다. 평면뿐 아니라 ㄱ·ㄷ 코너, 천장·바닥, 곡면까지 계산합니다.</p>
+
+    <h4>2. 가장 중요한 값: T (벽 ~ 스크린 앞면 거리)</h4>
+    <p>코너 계산은 전부 이 값으로 합니다. "공통 자재·깊이"에서 자동 계산됩니다.</p>
+    <ul>
+      <li><b>매립</b>: T = 매립 깊이 D + 깊이 조정값 (예: 120 + (−2) = 118)</li>
+      <li><b>벽부착</b>: T = 브라켓 이격 + 파이프 + 스크린 두께 (예: 29 + 50 + 61 = 140)</li>
+    </ul>
+    <p>특정 면만 깊이가 다르면 그 면의 "깊이 T 따로" 칸에 직접 넣으세요.</p>
+
+    <h4>3. 사용 순서</h4>
+    <ol>
+      <li>위 탭에서 <b>면 조합</b>(평면·ㄱ·ㄷ·천장/바닥) 또는 <b>곡면</b>을 고릅니다.</li>
+      <li><b>형태 프리셋</b>에서 현장과 가장 비슷한 것을 누릅니다.</li>
+      <li><b>공통 자재·깊이</b>에 파이프 규격, 스크린 두께, 깊이를 넣습니다.</li>
+      <li>각 면에 <b>벽 길이·높이(실측)</b>와 <b>캐비넷 구성</b>을 넣습니다.</li>
+      <li>면 사이의 <b>코너 카드</b>에서 코너 종류와 마감 방식을 고릅니다.</li>
+      <li>아래 결과에서 <b>경고(주황·빨강)</b>가 없는지 확인하고, 표의 숫자대로 먹매김합니다.</li>
+    </ol>
+    <p>입력은 바로바로 계산되고, 이 기기 브라우저에 자동 저장됩니다. 처음부터 하려면 맨 아래 "전체 초기화".</p>
+
+    <h4>4. 면 입력 규칙</h4>
+    <ul>
+      <li>면은 <b>관람자가 화면을 바라볼 때 왼쪽 → 오른쪽</b> 순서입니다. (ㄷ이면 좌측벽 → 정면 → 우측벽)</li>
+      <li><b>벽 길이</b>는 코너에서 코너까지 <b>벽 구조면</b>(마감 전 벽)끼리 잰 길이입니다.</li>
+      <li>세로 단 구성은 원래처럼 <b>상단 → 하단</b> 순서로 넣습니다.</li>
+      <li>"+ 오른쪽에 면 추가"로 면을 늘리면 사이에 코너가 하나 생깁니다.</li>
+    </ul>
+
+    <h4>5. 코너 종류</h4>
+    <ul>
+      <li><b>내측 90°</b>: 방 안쪽 모서리. ㄱ·ㄷ 실내 설치가 여기에 해당합니다.</li>
+      <li><b>외측 90°</b>: 튀어나온 모서리. 기둥이나 벽 끝을 감쌀 때입니다.</li>
+    </ul>
+
+    <h4>6. 마감 방식 (코너에서 누가 끝까지 가나)</h4>
+    <p>두 스크린이 코너에서 만날 때, 한쪽은 <b>코너 끝까지 길게(덮음)</b> 가고 다른 쪽은 그 스크린 <b>앞면에 붙여서 짧게(맞댐)</b> 끝납니다.</p>
+    <ul>
+      <li><b>"OO 덮음 (코너까지)"</b>: OO면이 코너 안쪽 끝까지 가고, 상대 면은 OO 스크린 앞면에 붙습니다.</li>
+      <li><b>45° 사선 캐비넷</b>: 양쪽 캐비넷 옆면이 45°로 깎여 앞모서리끼리 맞닿는 전용 캐비넷일 때만 고르세요.</li>
+    </ul>
+    <div class="tip">어느 쪽을 덮게 할지는 보통 <b>잘 보이는 면(정면)</b>을 덮는 쪽으로 해서 화면이 끊기지 않게 합니다. 코너 카드 아래 그림이 선택에 따라 바뀌니 보면서 고르세요.</div>
+
+    <h4>7. 끝단 조건과 배치</h4>
+    <ul>
+      <li><b>개구부 벽(매립)</b>: 양쪽에 벽이 있는 매립형. 남는 여백을 양쪽에 똑같이 나눕니다.</li>
+      <li><b>자유단</b>: 벽에 붙지 않고 끝나는 쪽. 남는 길이가 이쪽으로 갑니다.</li>
+      <li><b>배치 = 자동</b>이면 코너 쪽을 먼저 딱 맞추고 나머지를 자유단으로 보냅니다. 바닥에서 몇 mm 띄울지 정해져 있으면 "하단 여백 직접 입력"을 쓰세요.</li>
+    </ul>
+
+    <h4>8. 천장 · 바닥 LED</h4>
+    <ul>
+      <li><b>기준 벽</b>: 천장의 가로 방향을 같이 쓰는 벽입니다. ㄷ이면 보통 정면.</li>
+      <li><b>깊이</b>: 기준 벽면에서 천장 바깥 끝까지 실측.</li>
+      <li><b>벽과 만나는 코너</b>: 벽 스크린을 천장까지 끝까지 올릴지, 천장 스크린을 끝까지 뻗고 벽을 맞댈지 고릅니다.</li>
+    </ul>
+
+    <h4>9. 결과 보는 법</h4>
+    <ul>
+      <li><b>평면도</b>: 위에서 내려다본 그림. 회색=벽, 파랑=스크린, 주황=파이프.</li>
+      <li><b>상태 칸</b>: 초록=정상, 주황=틈·돌출(확인 필요), 빨강=간섭(설치 불가). 허용 오차는 공통 설정에서 바꿀 수 있습니다.</li>
+      <li><b>줄자 기준표</b>: 파이프 <b>중심</b> 위치를 양쪽 기준(예: 좌측벽 코너에서 / 우측벽 코너에서)으로 보여줍니다. 편한 쪽에서 재세요.</li>
+      <li><b>설치 구간</b>: 파이프 한쪽 면 ~ 반대쪽 면 위치입니다.</li>
+      <li><b>파이프 뒤 여유</b>가 빨강이면 깊이가 모자라 파이프가 벽에 닿습니다.</li>
+    </ul>
+
+    <h4>10. 곡면 탭</h4>
+    <ul>
+      <li><b>오목</b>: 관람자를 감싸는 곡면 / <b>볼록</b>: 기둥처럼 바깥으로 휜 곡면.</li>
+      <li><b>R</b>: 원 중심에서 스크린 앞면까지 반경.</li>
+      <li><b>플렉시블</b>은 매끈한 곡선(가로 파이프 벤딩), <b>평판 꺾음</b>은 일반 캐비넷을 조금씩 꺾어 붙인 다각형입니다.</li>
+      <li><b>먹매김 방법</b>: 바닥에 1번과 마지막 파이프 중심을 찍고 실을 띄웁니다. 실을 따라 X만큼 간 지점에서 직각으로 Y만큼 떨어진 곳이 파이프 중심입니다.</li>
+      <li><b>벤딩 파이프 규격</b>: 벤딩 업체에 줄 반경과 절단 길이입니다. 여유 절단분은 따로 더하세요.</li>
+    </ul>
+
+    <h4>11. 시공 순서 (ㄱ·ㄷ)</h4>
+    <ul>
+      <li>ㄷ은 <b>중앙 벽(정면)부터</b> 시공하고 옆 벽으로 나오는 것이 기본입니다. "먼저 시공할 기준 면"이 자동이면 가운데 면, ㄱ이면 코너를 덮는 면이 기준이 됩니다.</li>
+      <li>결과는 <b>시공 순위대로</b> 나옵니다. 기준 면이 아닌 면은 파이프 번호가 <b>코너 쪽부터 1번</b>입니다.</li>
+      <li>옆 벽은 구조 벽이 아니라 <b>이미 설치된 정면 스크린 앞면</b>에 줄자를 대고 잽니다(주황 숫자). 정면에서 생긴 오차가 옆 벽으로 넘어가지 않고, 남는 길이는 바깥 끝에서 정리됩니다.</li>
+      <li>이 방식이면 코너 마감은 <b>기준 면이 덮음</b>이어야 합니다. 반대로 설정하면 경고가 나옵니다.</li>
+    </ul>
+
+    <h4>12. 현장 저장 · 공유 · 인쇄</h4>
+    <ul>
+      <li><b>현장 이름</b>을 적고 <b>💾 저장</b>하면 이 기기에 저장됩니다. 아래 목록에서 골라 <b>불러오기</b>.</li>
+      <li><b>🔗 공유</b>: 지금 입력값이 담긴 주소를 만듭니다. 카톡 등으로 보내면 받는 사람이 같은 결과를 봅니다(받은 쪽은 💾 저장해야 남습니다).</li>
+      <li><b>🖨 인쇄·PDF</b>: 입력 요약 + 도면 + 줄자 기준표를 A4로 출력합니다. 휴대폰은 인쇄 화면에서 "PDF로 저장"을 고르세요.</li>
+      <li><b>홈 화면에 설치</b>: 안드로이드는 상단 "📲 앱 설치" 버튼(또는 크롬 메뉴 → 홈 화면에 추가), 아이폰은 사파리 공유 버튼 → "홈 화면에 추가". 한 번 열어두면 <b>인터넷이 없어도</b> 동작합니다.</li>
+    </ul>
+
+    <h4>13. 주의</h4>
+    <ul>
+      <li>코너는 정확히 90°라고 보고 계산합니다. 벽이 틀어져 있으면 현장 실측으로 보정하세요.</li>
+      <li>결과는 계산값이므로 첫 파이프 설치 후 캐비넷 1장을 대보고 확인한 다음 진행하는 것을 권장합니다.</li>
+    </ul>
+
+    <h4>업데이트 내역</h4>
+    <ul>
+      <li><b>v2.3</b>: 웹앱(홈 화면 설치·오프라인), 현장별 저장, 공유 링크, 인쇄·PDF</li>
+      <li><b>v2.2</b>: ㄷ 중앙 벽 먼저 시공 → 옆 벽은 설치된 스크린 앞면 기준 측정</li>
+      <li><b>v2.1</b>: 코너 설명 그림, 사용 설명서</li>
+      <li><b>v2.0</b>: ㄱ·ㄷ·천장/바닥·기둥·곡면, 평면도/입면도, 자동 검사</li>
+      <li><b>v1</b>: 매립 평면 계산</li>
+    </ul>
+  </details>
+  <div id="toolbar" class="no-print"></div>
+  <div id="form"></div>
+  <div id="results"></div>
+  <div class="no-print" style="text-align:center;margin:16px 0 30px"><button class="btn sm" data-act="reset">전체 초기화</button><div class="ver" id="ver"></div></div>
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+/* =========================================================
+ * 0. 유틸
+ * ========================================================= */
+const $ = s => document.querySelector(s);
+const num = v => (v === '' || v == null || isNaN(+v)) ? 0 : +v;
+const r1 = n => { const v = Math.round(n * 10) / 10; return Object.is(v, -0) ? 0 : v; };
+const f = n => String(r1(n));
+const deg = rad => r1(rad * 180 / Math.PI);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+function getPath(obj, path) { return path.split('.').reduce((o, k) => o?.[k], obj); }
+function setPath(obj, path, val) {
+  const ks = path.split('.'); const last = ks.pop();
+  ks.reduce((o, k) => o[k], obj)[last] = val;
+}
+function expand(list) {
+  const a = [];
+  (list || []).forEach(it => { const n = Math.max(0, Math.floor(num(it.c))); for (let i = 0; i < n; i++) a.push(num(it.s)); });
+  return a;
+}
+
+/* =========================================================
+ * 1. 기본 데이터 & 프리셋
+ * ========================================================= */
+const it = (s, c) => ({ s, c });
+function mkFace(name, L, H, cols, rows, dir = 'v') {
+  return { name, L, H, cols, rows, dir, alignA: 'auto', manA: 0, alignB: 'auto', manB: 0, T: '' };
+}
+function mkSlab(on, depth, cols, rows) {
+  return { on, ref: 0, depth, method: 'wall', frontEnd: 'free', dir: 'a', alignA: 'auto', manA: 0, alignB: 'auto', manB: 0, T: '', cols, rows };
+}
+function chainBase() {
+  return {
+    startEnd: 'free', endEnd: 'free', bottomEnd: 'free', topEnd: 'free', base: 'auto',
+    faces: [], corners: [],
+    ceil: mkSlab(false, 2500, [it(500, 6)], [it(500, 4)]),
+    floor: mkSlab(false, 2500, [it(500, 6)], [it(500, 4)]),
+  };
+}
+const PRESETS = {
+  flat: { label: '평면 (매립)', make() {
+    const ch = chainBase();
+    Object.assign(ch, { startEnd: 'opening', endEnd: 'opening', bottomEnd: 'opening', topEnd: 'opening' });
+    ch.faces = [mkFace('정면', 3220, 2420, [it(640, 5)], [it(480, 5)])];
+    return { common: { depthMode: 'recess' }, chain: ch };
+  } },
+  L: { label: 'ㄱ 코너', make() {
+    const ch = chainBase();
+    ch.faces = [mkFace('좌측벽', 2500, 2700, [it(500, 4)], [it(500, 5)]), mkFace('정면', 3079, 2700, [it(500, 6)], [it(500, 5)])];
+    ch.corners = [{ type: 'in', method: 'B' }];
+    return { common: { depthMode: 'surface' }, chain: ch };
+  } },
+  U: { label: 'ㄷ 코너', make() {
+    const ch = chainBase();
+    ch.faces = [mkFace('좌측벽', 2500, 2700, [it(500, 4)], [it(500, 5)]), mkFace('정면', 3158, 2700, [it(500, 6)], [it(500, 5)]), mkFace('우측벽', 2500, 2700, [it(500, 4)], [it(500, 5)])];
+    ch.corners = [{ type: 'in', method: 'B' }, { type: 'in', method: 'A' }];
+    return { common: { depthMode: 'surface' }, chain: ch };
+  } },
+  UCF: { label: 'ㄷ + 천장·바닥', make() {
+    const ch = chainBase();
+    ch.faces = [mkFace('좌측벽', 2500, 3158, [it(500, 4)], [it(500, 6)]), mkFace('정면', 3158, 3158, [it(500, 6)], [it(500, 6)]), mkFace('우측벽', 2500, 3158, [it(500, 4)], [it(500, 6)])];
+    ch.corners = [{ type: 'in', method: 'B' }, { type: 'in', method: 'A' }];
+    ch.ceil = mkSlab(true, 2500, [it(480, 6)], [it(500, 4)]); ch.ceil.ref = 1;
+    ch.floor = mkSlab(true, 2500, [it(480, 6)], [it(500, 4)]); ch.floor.ref = 1;
+    return { common: { depthMode: 'surface' }, chain: ch };
+  } },
+  WC: { label: '벽 + 천장 (단면 ㄱ)', make() {
+    const ch = chainBase();
+    ch.faces = [mkFace('정면', 3000, 2579, [it(500, 6)], [it(500, 5)])];
+    ch.ceil = mkSlab(true, 1640, [it(500, 6)], [it(500, 3)]);
+    return { common: { depthMode: 'surface' }, chain: ch };
+  } },
+  CL: { label: '기둥 감싸기 (외측)', make() {
+    const ch = chainBase();
+    ch.faces = [mkFace('A면', 860, 2700, [it(500, 2)], [it(500, 5)]), mkFace('B면', 921, 2700, [it(500, 2)], [it(500, 5)])];
+    ch.corners = [{ type: 'out', method: 'A' }];
+    return { common: { depthMode: 'surface' }, chain: ch };
+  } },
+};
+const DEFAULT_COMMON = { pipe: 50, t: 61, depthMode: 'recess', D: 120, adj: -2, standoff: 29, shift: 0, tol: 2 };
+const DEFAULT_ARC = { R: 3000, shape: 'concave', kind: 'flex', minR: '', H: 2400, bottomEnd: 'free', topEnd: 'free', dir: 'h', alignB: 'auto', manB: 0, cols: [it(320, 15)], rows: [it(160, 15)] };
+function defaultState() {
+  const p = PRESETS.flat.make();
+  return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
+}
+const APP_VERSION = '2.3';
+const LS_KEY = 'ledFrameCalc.v2';
+const LS_PROJ = 'ledFrameCalc.projects';
+// 저장본/공유본을 현재 구조에 맞게 보정
+function normalizeState(s) {
+  if (!s || !s.chain || !s.arc) return defaultState();
+  const d = defaultState();
+  s.mode = s.mode === 'arc' ? 'arc' : 'chain';
+  s.common = { ...DEFAULT_COMMON, ...s.common };
+  s.arc = { ...d.arc, ...s.arc };
+  s.chain = { ...chainBase(), ...s.chain };
+  if (s.chain.base == null) s.chain.base = 'auto';
+  if (!Array.isArray(s.chain.faces) || !s.chain.faces.length) s.chain = d.chain;
+  while (s.chain.corners.length < s.chain.faces.length - 1) s.chain.corners.push({ type: 'in', method: 'A' });
+  s.projectName = s.projectName || '';
+  return s;
+}
+let state;
+try { state = normalizeState(JSON.parse(localStorage.getItem(LS_KEY))); } catch (e) { state = defaultState(); }
+const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} };
+
+/* ---------- 현장 저장 ---------- */
+function loadProjects() { try { return JSON.parse(localStorage.getItem(LS_PROJ)) || {}; } catch (e) { return {}; } }
+function storeProjects(p) { localStorage.setItem(LS_PROJ, JSON.stringify(p)); }
+
+/* ---------- 공유 링크 (입력값을 압축해서 주소 # 뒤에 담음) ---------- */
+const b64u = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = str => { const b = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const out = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i); return out; };
+async function encodeState(s) {
+  const bytes = new TextEncoder().encode(JSON.stringify(s));
+  if (window.CompressionStream) {
+    try {
+      const st = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+      return 'z' + b64u(new Uint8Array(await new Response(st).arrayBuffer()));
+    } catch (e) {}
+  }
+  return 'j' + b64u(bytes);
+}
+async function decodeState(code) {
+  let bytes = unb64u(code.slice(1));
+  if (code[0] === 'z') {
+    const st = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    bytes = new Uint8Array(await new Response(st).arrayBuffer());
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function toast(msg) {
+  const el = $('#toast'); if (!el) return;
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 2600);
+}
+
+/* =========================================================
+ * 2. 계산 엔진
+ * ========================================================= */
+// 벽(구조면) ~ 스크린 앞면 거리
+function commonT(c) { return c.depthMode === 'recess' ? num(c.D) + num(c.adj) : num(c.standoff) + num(c.pipe) + num(c.t); }
+function ownT(o, c) { return (o.T === '' || o.T == null) ? commonT(c) : num(o.T); }
+
+/* 끝단 조건(spec)
+ *   e = 해당 끝의 벽면(코너 구조면)에서 스크린 끝선까지의 거리 (+: 안쪽, -: 벽 밖으로 넘어감)
+ *   opening  : 개구부 벽. e >= 0, 여백
+ *   free     : 자유단
+ *   in-cover : 내측 코너, 이 면이 코너까지 진행 → 상대면 스크린 뒤로 숨음. 이상값 To - t
+ *   in-butt  : 내측 코너, 상대면 앞면에 맞댐 → 이상값 To
+ *   out-cover: 외측 코너, 이 면이 상대면 앞면선까지 뻗음 → 이상값 -To
+ *   out-butt : 외측 코너, 덮는 면의 뒷면에 맞댐 → 이상값 -(To - t)
+ *   in/out-miter: 45° 맞춤, 전면 모서리 기준 → ±To
+ */
+const IDEAL = {
+  opening: () => 0, free: () => 0,
+  'in-cover': s => s.To - s.t, 'in-butt': s => s.To,
+  'out-cover': s => -s.To, 'out-butt': s => -(s.To - s.t),
+  'in-miter': s => s.To, 'out-miter': s => -s.To,
+};
+const isFlexEnd = s => s.kind === 'opening' || s.kind === 'free';
+
+function endStatus(s, e, tol) {
+  const i = IDEAL[s.kind](s), d = e - i;
+  const who = s.label ? `${s.label}` : '상대면';
+  switch (s.kind) {
+    case 'opening': return e < -tol ? { lv: 'err', tx: `벽 간섭 ${f(-e)}mm (캐비넷이 개구부보다 큼)` } : { lv: 'ok', tx: `여백 ${f(e)}mm` };
+    case 'free': return { lv: 'ok', tx: `끝단 여유 ${f(e)}mm` };
+    case 'in-cover':
+      if (e < -tol) return { lv: 'err', tx: `${who} 벽 간섭 ${f(-e)}mm` };
+      if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm (${who} 스크린 옆이 벌어짐)` };
+      if (d < -tol) return { lv: 'info', tx: `${who} 스크린 뒤로 ${f(-d)}mm 더 들어감 (그만큼 가려짐)` };
+      return { lv: 'ok', tx: `코너 정합 (${who} 뒤로 진행)` };
+    case 'out-cover':
+      if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm (${who} 측면 노출)` };
+      if (d < -tol) return { lv: 'warn', tx: `코너 돌출 ${f(-d)}mm` };
+      return { lv: 'ok', tx: `코너 정합 (${who} 앞면선까지)` };
+    default:
+      if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm` };
+      if (d < -tol) return { lv: 'err', tx: `코너 간섭 ${f(-d)}mm (캐비넷 겹침)` };
+      return { lv: 'ok', tx: s.kind.endsWith('miter') ? '45° 모서리 정합' : `코너 정합 (${who} 앞면에 맞댐)` };
+  }
+}
+
+// 1차원 배치: 원 길이 Lraw 안에 캐비넷 배열 + 끝단 조건 → 스크린 위치 & 파이프 위치
+function layout1D({ Lraw, sizes, sS, sE, align, manual, pipe, shift, tol, names }) {
+  const C = sizes.reduce((a, b) => a + b, 0);
+  const iS = IDEAL[sS.kind](sS), iE = IDEAL[sE.kind](sE);
+  const L = Lraw - C - iS - iE; // 남는 길이 (음수 = 부족)
+  const fS = !isFlexEnd(sS), fE = !isFlexEnd(sE);
+  let mode = align || 'auto';
+  if (mode === 'auto') mode = (!fS && !fE) ? 'center' : (fS && !fE) ? 'start' : (!fS && fE) ? 'end' : 'both';
+  let eS;
+  if (mode === 'center') eS = iS + L / 2;
+  else if (mode === 'start') eS = iS;
+  else if (mode === 'end') eS = iS + L;
+  else if (mode === 'manual') eS = num(manual);
+  else { // 양쪽 모두 코너
+    if (L >= 0) eS = iS + L / 2;
+    else { // 길이 부족 → 덮는 쪽 코너(숨김 포켓)부터 흡수
+      const need = -L;
+      const pS = sS.kind === 'in-cover' ? Math.max(0, iS) : 0;
+      const pE = sE.kind === 'in-cover' ? Math.max(0, iE) : 0;
+      let aS = Math.min(pS, need / 2); const aE = Math.min(pE, need - aS); aS = Math.min(pS, need - aE);
+      const rem = need - aS - aE;
+      eS = iS - aS - rem / 2;
+    }
+  }
+  const eE = Lraw - C - eS;
+  const x0 = eS, x1 = eS + C, h = pipe / 2;
+  const seams = [x0]; let x = x0;
+  sizes.forEach(w => { x += w; seams.push(x); });
+  const pipes = [];
+  if (sizes.length) {
+    pipes.push({ desc: names.start, c: x0 + h, fixed: true });
+    for (let i = 0; i < sizes.length - 1; i++) pipes.push({ desc: names.joint(i + 1, i + 2), c: seams[i + 1] + shift });
+    pipes.push({ desc: names.end(sizes.length), c: x1 - h, fixed: true });
+  }
+  return { Lraw, C, eS, eE, x0, x1, seams, pipes, count: sizes.length,
+    stS: endStatus(sS, eS, tol), stE: endStatus(sE, eE, tol), sS, sE };
+}
+
+const NAMES_COL = { start: '1열 시작 끝단', joint: (a, b) => `${a}-${b}열 조인트`, end: n => `${n}열 끝 끝단` };
+const NAMES_ROW = { start: '최하단 끝단', joint: (a, b) => `하${a}-${b}단 조인트`, end: () => '최상단 끝단' };
+const NAMES_SLAB_Y = { start: '벽쪽 끝단', joint: (a, b) => `벽쪽 ${a}-${b}줄 조인트`, end: () => '바깥 끝단' };
+
+function cornerSpec(corner, role, To, t, label) {
+  const k = corner.method === 'miter' ? `${corner.type}-miter` : `${corner.type}-${corner.method === role ? 'cover' : 'butt'}`;
+  return { kind: k, To, t, label };
+}
+// 벽-천장/바닥 코너 (항상 내측). method 'wall' = 벽 스크린이 끝까지, 'slab' = 천장/바닥이 끝까지
+function slabSpec(method, who, To, t, label) { return { kind: `in-${method === who ? 'cover' : 'butt'}`, To, t, label }; }
+
+function depthInfo(T, t, pipe) {
+  const back = T - t - pipe; // 벽~파이프 뒷면
+  return { T, pipeFront: T - t, pipeBack: back, clr: back };
+}
+
+function computeChain(st) {
+  const c = st.common, ch = st.chain;
+  const pipe = num(c.pipe), t = num(c.t), shift = num(c.shift), tol = num(c.tol);
+  const faces = ch.faces, n = faces.length;
+  const Ts = faces.map(fc => ownT(fc, c));
+  const ceilOn = !!ch.ceil.on, floorOn = !!ch.floor.on;
+  const Tc = ownT(ch.ceil, c), Tf = ownT(ch.floor, c);
+  const base = { pipe, shift, tol };
+  const out = { T: commonT(c), faces: [], slabs: [] };
+
+  faces.forEach((fc, i) => {
+    const prev = faces[i - 1], next = faces[i + 1];
+    const sS = i === 0 ? { kind: ch.startEnd } : cornerSpec(ch.corners[i - 1], 'B', Ts[i - 1], t, prev.name);
+    const sE = i === n - 1 ? { kind: ch.endEnd } : cornerSpec(ch.corners[i], 'A', Ts[i + 1], t, next.name);
+    const sB = floorOn ? slabSpec(ch.floor.method, 'wall', Tf, t, '바닥') : { kind: ch.bottomEnd };
+    const sT = ceilOn ? slabSpec(ch.ceil.method, 'wall', Tc, t, '천장') : { kind: ch.topEnd };
+    const A = layout1D({ ...base, Lraw: num(fc.L), sizes: expand(fc.cols), sS, sE, align: fc.alignA, manual: fc.manA, names: NAMES_COL });
+    const B = layout1D({ ...base, Lraw: num(fc.H), sizes: expand(fc.rows).reverse(), sS: sB, sE: sT, align: fc.alignB, manual: fc.manB, names: NAMES_ROW });
+    const endRef = (k, isStart) => k === 'opening' ? (isStart ? '시작쪽 개구부 벽' : '끝쪽 개구부 벽') : (isStart ? '시작쪽 바깥 끝' : '끝쪽 바깥 끝');
+    out.faces.push({
+      kind: 'wall', idx: i, title: `면 ${i + 1}: ${fc.name}`, name: fc.name, T: Ts[i], A, B,
+      main: fc.dir === 'v' ? 'A' : 'B',
+      mainLabel: fc.dir === 'v' ? '세로 파이프 (가로 위치)' : '가로 파이프 (높이 위치)',
+      axis: { A: '가로', B: '세로' },
+      refs: {
+        aS: i === 0 ? endRef(ch.startEnd, true) : `${prev.name} 코너 벽면`,
+        aE: i === n - 1 ? endRef(ch.endEnd, false) : `${next.name} 코너 벽면`,
+        bS: floorOn ? '바닥 구조면' : (ch.bottomEnd === 'opening' ? '개구부 하단' : '바닥 기준'),
+        bE: ceilOn ? '천장 구조면' : (ch.topEnd === 'opening' ? '개구부 상단' : '상단 기준'),
+      },
+      depth: depthInfo(Ts[i], t, pipe),
+    });
+  });
+
+  [['ceil', '천장', ceilOn, Tc], ['floor', '바닥', floorOn, Tf]].forEach(([key, label, on, Tsl]) => {
+    if (!on || !n) return;
+    const sl = ch[key];
+    const ref = Math.min(Math.max(0, num(sl.ref)), n - 1);
+    const fr = faces[ref];
+    let sS, sE;
+    if (ref > 0) sS = ch.corners[ref - 1].type === 'in' ? slabSpec(sl.method, 'slab', Ts[ref - 1], t, faces[ref - 1].name) : { kind: 'free' };
+    else sS = { kind: ch.startEnd };
+    if (ref < n - 1) sE = ch.corners[ref].type === 'in' ? slabSpec(sl.method, 'slab', Ts[ref + 1], t, faces[ref + 1].name) : { kind: 'free' };
+    else sE = { kind: ch.endEnd };
+    const yS = slabSpec(sl.method, 'slab', Ts[ref], t, fr.name);
+    const yE = { kind: sl.frontEnd };
+    const A = layout1D({ ...base, Lraw: num(fr.L), sizes: expand(sl.cols), sS, sE, align: sl.alignA, manual: sl.manA, names: NAMES_COL });
+    const B = layout1D({ ...base, Lraw: num(sl.depth), sizes: expand(sl.rows), sS: yS, sE: yE, align: sl.alignB, manual: sl.manB, names: NAMES_SLAB_Y });
+    out.slabs.push({
+      kind: key, ref, title: `${label} (기준벽: ${fr.name})`, name: label, T: Tsl, A, B,
+      main: sl.dir === 'a' ? 'A' : 'B',
+      mainLabel: sl.dir === 'a' ? `${fr.name}과 직각 파이프 (가로 위치)` : `${fr.name}과 평행 파이프 (깊이 위치)`,
+      axis: { A: '가로', B: '깊이' },
+      refs: {
+        aS: ref > 0 ? `${faces[ref - 1].name} 벽면` : '시작 끝 기준점',
+        aE: ref < n - 1 ? `${faces[ref + 1].name} 벽면` : '끝 끝 기준점',
+        bS: `${fr.name} 벽면`, bE: sl.frontEnd === 'opening' ? '바깥 개구부 벽' : '바깥 끝',
+      },
+      depth: depthInfo(Tsl, t, pipe),
+    });
+  });
+  applyInstallOrder(out, ch, Ts);
+  return out;
+}
+
+// 기준 면(먼저 시공) 결정: 자동이면 3면 이상은 가운데, 2면은 코너를 덮는 면
+function baseIndex(ch) {
+  const n = ch.faces.length;
+  if (ch.base !== 'auto' && ch.base !== '' && ch.base != null) return Math.min(Math.max(0, num(ch.base)), n - 1);
+  if (n >= 3) return Math.floor((n - 1) / 2);
+  if (n === 2) return ch.corners[0]?.method === 'B' ? 1 : 0;
+  return 0;
+}
+/* 시공 순서 반영
+ *  - 기준 면부터 바깥쪽으로 순서를 매김
+ *  - 기준 면이 아닌 면은 '먼저 시공한 이웃 면의 스크린 앞면'을 기준으로 재고,
+ *    파이프 번호도 그 코너 쪽에서부터 1번으로 매김 → 오차는 바깥 끝으로 빠짐 */
+function applyInstallOrder(out, ch, Ts) {
+  const n = out.faces.length; if (!n) return;
+  const b = baseIndex(ch);
+  out.base = b;
+  out.faces.forEach((fr, i) => {
+    fr.order = Math.abs(i - b) + 1;
+    fr.isBase = i === b;
+    if (fr.isBase) return;
+    const toward = i < b ? i + 1 : i - 1;            // 먼저 시공된 이웃 면
+    const corner = ch.corners[Math.min(i, toward)];
+    const nb = out.faces[toward];
+    const fromEnd = i < b;                            // 이웃이 이 면의 끝쪽에 있음
+    const refOff = corner.type === 'in' ? Ts[toward] : -Ts[toward]; // 코너 벽면 → 이웃 스크린 앞면
+    fr.measure = { nbName: nb.name, fromEnd, refOff, cornerType: corner.type,
+      coverByBase: corner.method !== 'miter' && ((corner.method === 'A') === (toward < i)) };
+  });
+  out.faces.sort((a, c) => a.order - c.order || a.idx - c.idx);
+}
+
+function computeArc(st) {
+  const c = st.common, a = st.arc;
+  const pipe = num(c.pipe), t = num(c.t), shift = num(c.shift), tol = num(c.tol);
+  const R = num(a.R), concave = a.shape === 'concave', sgn = concave ? 1 : -1;
+  const sizes = expand(a.cols);
+  const d = t + pipe * (a.dir === 'h' ? 1.5 : 0.5); // 스크린 앞면 → 세로 파이프 중심 (가로 메인이면 2열)
+  const warns = [];
+  if (R <= 0 || !sizes.length) return { error: '반경과 캐비넷 구성을 입력하세요.' };
+  const pt = (alpha, r) => [r * Math.sin(alpha), r * Math.cos(alpha)];
+  const add = (p, q, k = 1) => [p[0] + q[0] * k, p[1] + q[1] * k];
+  const sub = (p, q) => [p[0] - q[0], p[1] - q[1]];
+  const dot = (p, q) => p[0] * q[0] + p[1] * q[1];
+  const nrm = p => { const l = Math.hypot(p[0], p[1]) || 1; return [p[0] / l, p[1] / l]; };
+  const tan = alpha => [Math.cos(alpha), -Math.sin(alpha)]; // 각도 증가 방향 접선
+
+  let th, Th, front = [], pipes = [], joints = [];
+  if (a.kind === 'flex') {
+    th = sizes.map(w => w / R);
+    Th = th.reduce((x, y) => x + y, 0);
+    const rc = R + sgn * d;
+    if (rc <= 0) return { error: '볼록 곡면에서 반경이 스크린 두께+파이프보다 작습니다.' };
+    for (let k = 0; k <= 60; k++) front.push(pt(-Th / 2 + Th * k / 60, R));
+    let cum = 0;
+    const endAng = (pipe / 2) / rc;
+    pipes.push({ desc: NAMES_COL.start, P: pt(-Th / 2 + endAng, rc), alpha: -Th / 2 + endAng, fixed: true });
+    for (let i = 0; i < sizes.length - 1; i++) {
+      cum += th[i];
+      const al = -Th / 2 + cum + shift / R;
+      pipes.push({ desc: NAMES_COL.joint(i + 1, i + 2), P: pt(al, rc), alpha: al, turn: 0 });
+      joints.push(cum);
+    }
+    pipes.push({ desc: NAMES_COL.end(sizes.length), P: pt(Th / 2 - endAng, rc), alpha: Th / 2 - endAng, fixed: true });
+    if (num(a.minR) > 0 && R < num(a.minR)) warns.push({ lv: 'err', tx: `반경 R ${f(R)}mm < 모듈 최소 곡률반경 ${f(num(a.minR))}mm` });
+  } else {
+    th = sizes.map(w => 2 * Math.asin(Math.min(1, w / (2 * R))));
+    if (sizes.some(w => w > 2 * R)) warns.push({ lv: 'err', tx: '캐비넷 폭이 지름보다 큽니다.' });
+    Th = th.reduce((x, y) => x + y, 0);
+    const V = [pt(-Th / 2, R)]; let cum = -Th / 2;
+    th.forEach(x => { cum += x; V.push(pt(cum, R)); });
+    front = V;
+    const segN = i => { // 세그먼트 i 의 벽쪽 법선
+      const dd = nrm(sub(V[i + 1], V[i])); let nn = [-dd[1], dd[0]];
+      const mid = add(V[i], V[i + 1]); mid[0] /= 2; mid[1] /= 2;
+      if (dot(nn, mid) * sgn < 0) nn = [-nn[0], -nn[1]];
+      return { dd, nn };
+    };
+    const s0 = segN(0), sl = segN(sizes.length - 1);
+    pipes.push({ desc: NAMES_COL.start, P: add(add(V[0], s0.dd, pipe / 2), s0.nn, d), alpha: Math.atan2(-s0.dd[1], s0.dd[0]), fixed: true });
+    let ang = -Th / 2;
+    for (let i = 0; i < sizes.length - 1; i++) {
+      ang += th[i];
+      const turn = (th[i] + th[i + 1]) / 2;
+      const P = add(add(pt(ang, R + sgn * d / Math.cos(turn / 2)), [0, 0]), tan(ang), shift);
+      pipes.push({ desc: NAMES_COL.joint(i + 1, i + 2), P, alpha: ang, turn });
+      joints.push(ang + Th / 2);
+    }
+    pipes.push({ desc: NAMES_COL.end(sizes.length), P: add(add(V[V.length - 1], sl.dd, -pipe / 2), sl.nn, d), alpha: Math.atan2(-sl.dd[1], sl.dd[0]), fixed: true });
+    const maxTurn = Math.max(0, ...pipes.filter(p => p.turn != null).map(p => p.turn));
+    const g = 2 * t * Math.tan(maxTurn / 2);
+    if (concave) warns.push({ lv: 'info', tx: `오목 꺾음: 앞모서리 맞닿음 기준, 캐비넷 뒷면 V자 벌어짐 최대 ${f(g)}mm (문제 없음)` });
+    else warns.push({ lv: 'warn', tx: `볼록 꺾음: 앞모서리를 붙이면 뒷모서리 ${f(g)}mm 겹침 → 측면 경사 가공 또는 앞쪽 틈 ${f(g)}mm 발생` });
+  }
+  if (Th >= 2 * Math.PI) warns.push({ lv: 'err', tx: `총 각도 ${deg(Th)}° — 한 바퀴를 넘습니다.` });
+
+  // 현(기준선) 좌표: 첫 파이프 ~ 마지막 파이프 중심을 잇는 직선
+  const A0 = pipes[0].P, B0 = pipes[pipes.length - 1].P;
+  const u = nrm(sub(B0, A0)), v = [-u[1], u[0]];
+  pipes.forEach((p, i) => { p.index = i + 1; p.x = dot(sub(p.P, A0), u); p.y = dot(sub(p.P, A0), v); });
+  const chordP = Math.hypot(B0[0] - A0[0], B0[1] - A0[1]);
+
+  const Bl = layout1D({ Lraw: num(a.H), sizes: expand(a.rows).reverse(), sS: { kind: a.bottomEnd }, sE: { kind: a.topEnd },
+    align: a.alignB, manual: a.manB, pipe, shift, tol, names: NAMES_ROW });
+
+  const layer = k => { // k: 스크린 앞면에서 파이프 중심까지 깊이
+    const r = R + sgn * k;
+    return { r, arc: r * Th, chord: 2 * r * Math.sin(Th / 2), sag: r * (1 - Math.cos(Th / 2)) };
+  };
+  return {
+    R, concave, kind: a.kind, sizes, Th, th, front, pipes, chordP, u, v, Bl, warns, pipe, t, d,
+    totalW: sizes.reduce((x, y) => x + y, 0),
+    screenChord: 2 * R * Math.sin(Th / 2), screenSag: R * (1 - Math.cos(Th / 2)),
+    layer1: layer(t + pipe / 2), layer2: layer(t + pipe * 1.5),
+  };
+}
+
+/* =========================================================
+ * 3. 폼 렌더링
+ * ========================================================= */
+const field = (label, ctrl, unit = '') => `<div class="form-group"><label>${label}</label><div class="input-wrap">${ctrl}${unit ? `<span class="unit">${unit}</span>` : ''}</div></div>`;
+const hint = s => `<div class="form-hint">${s}</div>`;
+const numIn = (path, v, ph = '') => `<input type="number" data-bind="${path}" data-num="1" value="${esc(v)}" placeholder="${ph}">`;
+const txtIn = (path, v) => `<input type="text" data-bind="${path}" value="${esc(v)}">`;
+const sel = (path, v, opts, isNum = false) => `<select data-bind="${path}" ${isNum ? 'data-num="1"' : ''}>${opts.map(([k, l]) => `<option value="${k}" ${String(k) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+const chk = (path, v, label) => `<label class="check"><input type="checkbox" data-bind="${path}" ${v ? 'checked' : ''}>${label}</label>`;
+function listEd(path, list, sizeLabel, cntLabel) {
+  return list.map((x, i) => `<div class="dynamic-row">
+      <input type="number" data-bind="${path}.${i}.s" data-num="1" value="${esc(x.s)}" placeholder="${sizeLabel}(mm)">
+      <span class="x">×</span>
+      <input type="number" data-bind="${path}.${i}.c" data-num="1" value="${esc(x.c)}" placeholder="${cntLabel}">
+      <button class="btn del" data-act="delItem" data-path="${path}" data-idx="${i}">삭제</button>
+    </div>`).join('') + `<button class="btn sm" data-act="addItem" data-path="${path}">+ 규격 추가</button>`;
+}
+const END_OPTS = [['opening', '개구부 벽 (매립, 여백 균등)'], ['free', '자유단 (벽에 안 붙음)']];
+const alignOpts = (s, e) => [['auto', '자동 (코너 우선)'], ['center', '중앙'], ['start', `${s} 붙임`], ['end', `${e} 붙임`], ['manual', `${s} 여백 직접 입력`]];
+
+function commonForm() {
+  const c = state.common;
+  return `<div class="card"><h2>공통 자재 · 깊이</h2>
+    ${field('각파이프 규격', sel('common.pipe', c.pipe, [[30, '30각'], [40, '40각'], [50, '50각 (50×50)'], [60, '60각'], [75, '75각'], [100, '100각']], true))}
+    ${field('모듈 포함 스크린 두께 t', numIn('common.t', c.t), 'mm')}
+    ${field('깊이 기준', sel('common.depthMode', c.depthMode, [['recess', '매립 (개구부 깊이 D)'], ['surface', '벽부착 (브라켓 이격)']]))}
+    ${c.depthMode === 'recess'
+      ? field('매립 마감 유효 깊이 D', numIn('common.D', c.D), 'mm') + field('스크린 깊이 조정', numIn('common.adj', c.adj), 'mm') + hint('-2: 2mm 안으로 매립, +2: 2mm 돌출, 0: 플랫')
+      : field('벽 ~ 파이프 뒷면 이격', numIn('common.standoff', c.standoff), 'mm') + hint('브라켓/앵커 등 파이프 뒤 공간')}
+    ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc" style="color:#90caf9"></b> (코너 계산의 핵심값)')}
+    ${field('중간 조인트 편심 (좌/하 -, 우/상 +)', numIn('common.shift', c.shift), 'mm')}
+    ${hint('양 끝단 파이프는 고정, 중간 조인트 파이프만 이동')}
+    ${field('코너·여백 허용 오차 ±', numIn('common.tol', c.tol), 'mm')}
+  </div>`;
+}
+
+function faceForm(fc, i, n) {
+  const p = `chain.faces.${i}`;
+  return `<div class="card">
+    <div class="face-head"><span style="font-size:.8rem;color:#90caf9">면 ${i + 1}</span>${txtIn(p + '.name', fc.name)}
+      ${n > 1 ? `<button class="btn sm danger" data-act="delFace" data-idx="${i}">면 삭제</button>` : ''}</div>
+    ${field('벽 길이 (구조면 기준 실측)', numIn(p + '.L', fc.L), 'mm')}
+    ${field('높이 (바닥~천장 또는 개구부)', numIn(p + '.H', fc.H), 'mm')}
+    ${field('주 파이프 방향', sel(p + '.dir', fc.dir, [['v', '세로 파이프 (열 조인트)'], ['h', '가로 파이프 (단 조인트)']]))}
+    ${field('가로 배치', sel(p + '.alignA', fc.alignA, alignOpts('시작쪽', '끝쪽')))}
+    ${fc.alignA === 'manual' ? field('시작쪽 여백', numIn(p + '.manA', fc.manA), 'mm') : ''}
+    ${field('세로 배치', sel(p + '.alignB', fc.alignB, alignOpts('하단', '상단')))}
+    ${fc.alignB === 'manual' ? field('하단 여백 (바닥~스크린)', numIn(p + '.manB', fc.manB), 'mm') : ''}
+    ${field('이 면만 깊이 T 따로 (빈칸=공통)', numIn(p + '.T', fc.T, '공통'), 'mm')}
+    <div class="sub">가로 열 구성 (시작 → 끝 순) · 폭 × 수량</div>${listEd(p + '.cols', fc.cols, '폭', '수량')}
+    <div class="sub">세로 단 구성 (상단 → 하단 순) · 높이 × 단수</div>${listEd(p + '.rows', fc.rows, '높이', '단수')}
+  </div>`;
+}
+
+function cornerForm(cn, i, A, B) {
+  const p = `chain.corners.${i}`;
+  return `<div class="corner"><div class="ttl">↳ 코너 ${i + 1}: ${esc(A)} → ${esc(B)}</div>
+    ${field('코너 종류', sel(p + '.type', cn.type, [['in', '내측 90° (실내 ㄱ/ㄷ 안쪽)'], ['out', '외측 90° (기둥·모서리 감싸기)']]))}
+    ${field('마감 방식', sel(p + '.method', cn.method, [['A', `${esc(A)} 덮음 (코너까지)`], ['B', `${esc(B)} 덮음 (코너까지)`], ['miter', '45° 사선 캐비넷']]))}
+    ${cornerFig(cn, A, B)}
+  </div>`;
+}
+
+// 코너 마감 방식 설명 그림 (위에서 본 모습)
+function cornerFig(cn, A, B) {
+  const T = 30, t = 13, W = 12, E = 112;
+  const covA = cn.method === 'A', covB = cn.method === 'B', miter = cn.method === 'miter';
+  const colA = covA ? '#4fc3f7' : '#1e5f8a', colB = covB ? '#4fc3f7' : '#1e5f8a';
+  let g = '', desc = '';
+  if (cn.type === 'in') {
+    // 내측: 벽은 왼쪽(A)과 위쪽(B), 방 안쪽이 오른쪽 아래
+    g += `<polyline points="${W},${E} ${W},${W} ${E},${W}" fill="none" stroke="#9e9e9e" stroke-width="4"/>`;
+    const a0 = miter ? W + T - t : covA ? W + T - t : W + T; // A 스크린 시작(y)
+    const b0 = miter ? W + T - t : covB ? W + T - t : W + T; // B 스크린 시작(x)
+    if (miter) {
+      g += `<polygon points="${W + T - t},${W + T - t} ${W + T},${W + T} ${W + T},${E} ${W + T - t},${E}" fill="${colA}"/>`;
+      g += `<polygon points="${W + T - t},${W + T - t} ${W + T},${W + T} ${E},${W + T} ${E},${W + T - t}" fill="${colB}"/>`;
+    } else {
+      g += `<rect x="${W + T - t}" y="${a0}" width="${t}" height="${E - a0}" fill="${colA}"/>`;
+      g += `<rect x="${b0}" y="${W + T - t}" width="${E - b0}" height="${t}" fill="${colB}"/>`;
+    }
+    g += `<text x="${W + T + 8}" y="${E - 8}" font-size="11" fill="#ddd">${esc(A)}</text>`;
+    g += `<text x="${E - 4}" y="${W + T + 16}" font-size="11" fill="#ddd" text-anchor="end">${esc(B)}</text>`;
+    g += `<text x="80" y="88" font-size="9" fill="#777" text-anchor="middle">관람측</text>`;
+  } else {
+    // 외측: 기둥은 오른쪽 아래, 스크린은 바깥(왼쪽·위)
+    const P = 50;
+    g += `<rect x="${P}" y="${P}" width="${E - P + 8}" height="${E - P + 8}" fill="#333" stroke="#9e9e9e" stroke-width="3"/>`;
+    const xA = P - T, yB = P - T;
+    if (miter) {
+      g += `<polygon points="${xA},${yB} ${xA + t},${yB + t} ${xA + t},${E} ${xA},${E}" fill="${colA}"/>`;
+      g += `<polygon points="${xA},${yB} ${xA + t},${yB + t} ${E},${yB + t} ${E},${yB}" fill="${colB}"/>`;
+    } else {
+      const a0 = covA ? yB : yB + t, b0 = covB ? xA : xA + t;
+      g += `<rect x="${xA}" y="${a0}" width="${t}" height="${E - a0}" fill="${colA}"/>`;
+      g += `<rect x="${b0}" y="${yB}" width="${E - b0}" height="${t}" fill="${colB}"/>`;
+    }
+    g += `<text x="${xA + t + 3}" y="${E - 4}" font-size="11" fill="#ddd">${esc(A)}</text>`;
+    g += `<text x="${E - 2}" y="${yB - 4}" font-size="11" fill="#ddd" text-anchor="end">${esc(B)}</text>`;
+    g += `<text x="${(P + E) / 2 + 4}" y="${(P + E) / 2 + 8}" font-size="9" fill="#888" text-anchor="middle">기둥</text>`;
+  }
+  if (miter) desc = `두 캐비넷 옆면을 45°로 깎아 앞모서리끼리 맞춥니다. <b>전용 사선 캐비넷</b>일 때만 선택하세요.`;
+  else {
+    const cov = covA ? A : B, but = covA ? B : A;
+    desc = cn.type === 'in'
+      ? `<b>${esc(cov)}</b> 스크린이 코너 안쪽 끝까지 길게 가고, <b>${esc(but)}</b> 스크린은 ${esc(cov)} 스크린 <b>앞면에 붙여</b> 짧게 끝납니다.`
+      : `<b>${esc(cov)}</b> 스크린이 모서리 밖으로 뻗어 <b>${esc(but)}</b> 스크린 옆면을 가립니다. ${esc(but)} 스크린은 ${esc(cov)} 뒤에 붙습니다.`;
+    desc += `<br><span style="color:#90caf9">밝은 파랑 = 끝까지 가는(덮는) 면</span>`;
+    const ch = state.chain, bi = baseIndex(ch), bn = ch.faces[bi]?.name;
+    if (cn.type === 'in' && (bn === A || bn === B) && cov !== bn) desc += `<br><span style="color:#ffb74d">※ 기준 면(${esc(bn)})을 먼저 시공하면 "${esc(bn)} 덮음"이 맞습니다</span>`;
+  }
+  return `<div class="cornerfig"><svg viewBox="0 0 124 124">${g}</svg><div class="desc">${desc}</div></div>`;
+}
+
+function slabForm(key, label) {
+  const ch = state.chain, s = ch[key], p = `chain.${key}`;
+  let h = `<div class="card">${chk(p + '.on', s.on, `${label} LED 추가`)}`;
+  if (s.on) {
+    h += `<div style="margin-top:10px">
+      ${field('기준 벽 (가로 방향을 같이 씀)', sel(p + '.ref', s.ref, ch.faces.map((fc, i) => [i, `면 ${i + 1}: ${esc(fc.name)}`]), true))}
+      ${field(`${label} 깊이 (기준벽 ~ 바깥 끝, 실측)`, numIn(p + '.depth', s.depth), 'mm')}
+      ${field('벽과 만나는 코너', sel(p + '.method', s.method, [['wall', `벽 스크린이 끝까지 (${label}은 벽 사이)`], ['slab', `${label} 스크린이 끝까지 (벽이 맞댐)`]]))}
+      ${field('바깥 끝 조건', sel(p + '.frontEnd', s.frontEnd, END_OPTS))}
+      ${field('주 파이프 방향', sel(p + '.dir', s.dir, [['a', '기준벽과 직각 (가로 위치)'], ['b', '기준벽과 평행 (깊이 위치)']]))}
+      ${field('가로 배치', sel(p + '.alignA', s.alignA, alignOpts('시작쪽', '끝쪽')))}
+      ${s.alignA === 'manual' ? field('시작쪽 여백', numIn(p + '.manA', s.manA), 'mm') : ''}
+      ${field('깊이 배치', sel(p + '.alignB', s.alignB, alignOpts('벽쪽', '바깥쪽')))}
+      ${s.alignB === 'manual' ? field('벽쪽 여백', numIn(p + '.manB', s.manB), 'mm') : ''}
+      ${field(`${label} 깊이 T 따로 (빈칸=공통)`, numIn(p + '.T', s.T, '공통'), 'mm')}
+      <div class="sub">가로 열 구성 (기준벽 시작 → 끝) · 폭 × 수량</div>${listEd(p + '.cols', s.cols, '폭', '수량')}
+      <div class="sub">깊이 방향 구성 (벽쪽 → 바깥) · 길이 × 줄수</div>${listEd(p + '.rows', s.rows, '길이', '줄수')}
+    </div>`;
+  }
+  return h + '</div>';
+}
+
+function chainForm() {
+  const ch = state.chain, n = ch.faces.length;
+  let h = `<div class="card"><h2>형태 프리셋</h2><div class="presets">
+    ${Object.entries(PRESETS).map(([k, p]) => `<button class="btn" data-act="preset" data-key="${k}">${p.label}</button>`).join('')}
+    </div><div class="note">프리셋을 누르면 아래 면/코너 구성이 바뀝니다. 수치를 현장 실측값으로 고쳐 쓰세요.</div></div>`;
+  h += `<div class="card"><h2>끝단 조건</h2>
+    ${field(`체인 시작 끝 (${esc(ch.faces[0]?.name)} 시작쪽)`, sel('chain.startEnd', ch.startEnd, END_OPTS))}
+    ${field(`체인 마지막 끝 (${esc(ch.faces[n - 1]?.name)} 끝쪽)`, sel('chain.endEnd', ch.endEnd, END_OPTS))}
+    ${n > 1 ? field('먼저 시공할 기준 면', sel('chain.base', ch.base ?? 'auto', [['auto', `자동 (${esc(ch.faces[baseIndex(ch)]?.name)})`], ...ch.faces.map((fc, i) => [i, `면 ${i + 1}: ${esc(fc.name)}`])])) + hint('기준 면을 먼저 설치하고, 옆 면은 설치된 스크린 앞면에서부터 잽니다') : ''}
+    ${ch.floor.on ? '' : field('벽 하단', sel('chain.bottomEnd', ch.bottomEnd, END_OPTS))}
+    ${ch.ceil.on ? '' : field('벽 상단', sel('chain.topEnd', ch.topEnd, END_OPTS))}
+    <div class="note">면은 관람자가 화면을 바라볼 때 <b>왼쪽 → 오른쪽</b> 순서로 입력합니다.</div></div>`;
+  ch.faces.forEach((fc, i) => {
+    h += faceForm(fc, i, n);
+    if (i < n - 1) h += cornerForm(ch.corners[i], i, fc.name, ch.faces[i + 1].name);
+  });
+  h += `<button class="btn" style="width:100%;margin-bottom:12px" data-act="addFace">+ 오른쪽에 면 추가 (코너)</button>`;
+  h += slabForm('ceil', '천장') + slabForm('floor', '바닥');
+  return h;
+}
+
+function arcForm() {
+  const a = state.arc, p = 'arc';
+  return `<div class="card"><h2>곡면 설정</h2>
+    ${field('곡면 방향', sel(p + '.shape', a.shape, [['concave', '오목 (관람자 쪽으로 감쌈)'], ['convex', '볼록 (기둥·외벽형)']]))}
+    ${field('캐비넷 형태', sel(p + '.kind', a.kind, [['flex', '플렉시블 모듈 (매끈한 곡선)'], ['poly', '평판 캐비넷 꺾음 (다각형)']]))}
+    ${field('스크린 앞면 반경 R', numIn(p + '.R', a.R), 'mm')}
+    ${a.kind === 'flex' ? field('모듈 최소 곡률반경 (선택)', numIn(p + '.minR', a.minR, '스펙'), 'mm') : ''}
+    ${field('주 파이프 방향', sel(p + '.dir', a.dir, [['h', '가로 벤딩 파이프 (단 조인트)'], ['v', '세로 직관 파이프 (열 조인트)']]))}
+    ${field('설치 높이 (바닥~천장/개구부)', numIn(p + '.H', a.H), 'mm')}
+    ${field('하단', sel(p + '.bottomEnd', a.bottomEnd, END_OPTS))}
+    ${field('상단', sel(p + '.topEnd', a.topEnd, END_OPTS))}
+    ${field('세로 배치', sel(p + '.alignB', a.alignB, alignOpts('하단', '상단')))}
+    ${a.alignB === 'manual' ? field('하단 여백', numIn(p + '.manB', a.manB), 'mm') : ''}
+    <div class="sub">가로 구성 (왼쪽 → 오른쪽) · ${a.kind === 'flex' ? '모듈 폭(호 길이)' : '캐비넷 폭'} × 수량</div>${listEd(p + '.cols', a.cols, '폭', '수량')}
+    <div class="sub">세로 단 구성 (상단 → 하단) · 높이 × 단수</div>${listEd(p + '.rows', a.rows, '높이', '단수')}
+  </div>`;
+}
+
+let installPrompt = null;
+function renderToolbar() {
+  const projs = loadProjects();
+  const names = Object.keys(projs).sort((a, b) => (projs[b].savedAt || 0) - (projs[a].savedAt || 0));
+  const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  $('#toolbar').innerHTML = `<div class="card toolbar">
+    <div class="form-group"><label>현장 이름</label><div class="input-wrap"><input type="text" data-bind="projectName" value="${esc(state.projectName)}" placeholder="예: OO빌딩 로비" style="width:190px;text-align:left"></div></div>
+    <div class="btnrow">
+      <button class="btn pri" data-act="projSave">💾 저장</button>
+      <button class="btn" data-act="share">🔗 공유</button>
+      <button class="btn" data-act="print">🖨 인쇄·PDF</button>
+      <button class="btn" data-act="projNew">＋ 새 현장</button>
+    </div>
+    ${names.length ? `<div class="loadrow"><select id="projList">${names.map(n => `<option value="${esc(n)}">${esc(n)} (${dt(projs[n].savedAt)})</option>`).join('')}</select>
+      <button class="btn" data-act="projLoad">불러오기</button><button class="btn danger" data-act="projDel">삭제</button></div>`
+      : '<div class="note">저장된 현장이 없습니다. 이름을 적고 💾 저장을 누르세요.</div>'}
+    ${installPrompt ? '<button class="btn" style="width:100%;margin-top:8px" data-act="install">📲 앱으로 설치 (홈 화면)</button>' : ''}
+  </div>`;
+}
+
+function renderForm() {
+  renderToolbar();
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.mode === state.mode));
+  $('#form').innerHTML = commonForm() + (state.mode === 'chain' ? chainForm() : arcForm());
+}
+
+/* =========================================================
+ * 4. 결과 렌더링 (표 + 도면)
+ * ========================================================= */
+const box = (title, val, cls = '') => `<div class="summary-box"><div class="title">${title}</div><div class="val ${cls}">${val}</div></div>`;
+const stBox = (title, st) => box(title, esc(st.tx), `st-${st.lv}`);
+
+function elevSVG(r, pipe) {
+  const A = r.A, B = r.B, W = A.Lraw, H = B.Lraw;
+  if (W <= 0 || H <= 0) return '';
+  const M = Math.max(W, H), pad = M * 0.05, fs = M / 32, h = pipe / 2;
+  const Y = v => H - v;
+  let g = `<rect x="0" y="0" width="${W}" height="${H}" fill="#1c1c1c" stroke="#777" stroke-dasharray="${fs / 2}" vector-effect="non-scaling-stroke"/>`;
+  g += `<rect x="${A.x0}" y="${Y(B.x1)}" width="${A.C}" height="${B.C}" fill="#0d47a1" fill-opacity=".45" stroke="#4fc3f7" vector-effect="non-scaling-stroke"/>`;
+  A.seams.slice(1, -1).forEach(x => g += `<line x1="${x}" y1="${Y(B.x0)}" x2="${x}" y2="${Y(B.x1)}" stroke="#4fc3f7" stroke-opacity=".5" vector-effect="non-scaling-stroke"/>`);
+  B.seams.slice(1, -1).forEach(y => g += `<line x1="${A.x0}" y1="${Y(y)}" x2="${A.x1}" y2="${Y(y)}" stroke="#4fc3f7" stroke-opacity=".5" vector-effect="non-scaling-stroke"/>`);
+  const P = r.main === 'A' ? A.pipes : B.pipes;
+  P.forEach((p, i) => {
+    if (r.main === 'A') {
+      g += `<rect x="${p.c - h}" y="${Y(B.x1)}" width="${pipe}" height="${B.C}" fill="#ff9800" fill-opacity=".55"/>`;
+      const no = r.measure && r.measure.fromEnd ? P.length - i : i + 1;
+      g += `<text x="${p.c}" y="${Y(B.x1) - fs * 0.3}" font-size="${fs * 0.8}" fill="#ffb74d" text-anchor="middle">${no}</text>`;
+    } else {
+      g += `<rect x="${A.x0}" y="${Y(p.c) - h}" width="${A.C}" height="${pipe}" fill="#ff9800" fill-opacity=".55"/>`;
+      g += `<text x="${A.x1 + fs * 0.3}" y="${Y(p.c) + fs * 0.3}" font-size="${fs * 0.8}" fill="#ffb74d">${i + 1}</text>`;
+    }
+  });
+  const t = (x, y, s, anc = 'middle', col = '#bbb') => `<text x="${x}" y="${y}" font-size="${fs * 0.75}" fill="${col}" text-anchor="${anc}">${esc(s)}</text>`;
+  const big = v => Math.abs(v) > fs * 2.2;
+  if (big(A.eS)) g += t(A.x0 / 2, Y(B.x0 + B.C / 2), f(A.eS));
+  if (big(A.eE)) g += t(A.x1 + A.eE / 2, Y(B.x0 + B.C / 2), f(A.eE));
+  if (big(B.eS)) g += t(A.x0 + A.C / 2, Y(B.x0 / 2) + fs * 0.3, f(B.eS));
+  if (big(B.eE)) g += t(A.x0 + A.C / 2, Y(B.x1 + B.eE / 2) + fs * 0.3, f(B.eE));
+  g += t(0, H + fs * 1.1, '◀ ' + r.refs.aS, 'start', '#888') + t(W, H + fs * 1.1, r.refs.aE + ' ▶', 'end', '#888');
+  return `<div class="svgbox"><svg viewBox="${-pad} ${-pad - fs} ${W + 2 * pad} ${H + 2 * pad + fs * 2}">${g}</svg></div>`;
+}
+
+function planGeom(st) {
+  const ch = st.chain, faces = ch.faces, n = faces.length;
+  const turns = ch.corners.map(c => c.type === 'in' ? -Math.PI / 2 : Math.PI / 2);
+  const mid = Math.floor((n - 1) / 2);
+  let hd = 0; for (let k = 0; k < mid; k++) hd -= turns[k];
+  let P = [0, 0]; const segs = [];
+  for (let i = 0; i < n; i++) {
+    const d = [Math.round(Math.cos(hd) * 1e9) / 1e9, Math.round(Math.sin(hd) * 1e9) / 1e9];
+    const L = num(faces[i].L);
+    segs.push({ P0: P, d, n: [d[1], -d[0]], L });
+    P = [P[0] + d[0] * L, P[1] + d[1] * L];
+    if (i < n - 1) hd += turns[i];
+  }
+  const pt = (s, x, z) => [s.P0[0] + s.d[0] * x + s.n[0] * z, s.P0[1] + s.d[1] * x + s.n[1] * z];
+  return { segs, pt };
+}
+// 이웃한 두 면의 파이프(평면 투영)가 겹치는지 검사
+function pipeClashes(R, st) {
+  const t = num(st.common.t), pipe = num(st.common.pipe), out = [];
+  const { segs, pt } = planGeom(st);
+  const pl = k => typeof k === 'number' ? `${k}번 파이프` : '가로 파이프';
+  const byIdx = [...R.faces].sort((a, c) => a.idx - c.idx);
+  const boxes = byIdx.map((fr, i) => {
+    const s = segs[fr.idx], zc = fr.T - t - pipe / 2, A = fr.A;
+    const rects = fr.main === 'A'
+      ? A.pipes.map((p, k) => ({ k: k + 1, a: pt(s, p.c - pipe / 2, zc - pipe / 2), b: pt(s, p.c + pipe / 2, zc + pipe / 2) }))
+      : [{ k: '가로', a: pt(s, A.x0, zc - pipe / 2), b: pt(s, A.x1, zc + pipe / 2) }];
+    return rects.map(r => ({ k: r.k, x0: Math.min(r.a[0], r.b[0]), x1: Math.max(r.a[0], r.b[0]), y0: Math.min(r.a[1], r.b[1]), y1: Math.max(r.a[1], r.b[1]) }));
+  });
+  for (let i = 0; i < boxes.length - 1; i++) {
+    boxes[i].forEach(a => boxes[i + 1].forEach(b => {
+      const ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), oy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+      if (ox > 0.5 && oy > 0.5) out.push({ lv: 'warn', tx: `코너 ${i + 1}: ${byIdx[i].name} ${pl(a.k)}와 ${byIdx[i + 1].name} ${pl(b.k)}가 겹침 (${f(ox)}×${f(oy)}mm) → 1본 공용 또는 한쪽 생략/이동` });
+    }));
+  }
+  return out;
+}
+
+function planSVG(R, st) {
+  const ch = st.chain, faces = ch.faces, n = faces.length, t = num(st.common.t), pipe = num(st.common.pipe);
+  if (!n) return '';
+  const { segs, pt } = planGeom(st);
+  const xs = [], ys = [];
+  const reg = p => { xs.push(p[0]); ys.push(-p[1]); return [p[0], -p[1]]; };
+  let g = '';
+  const line = (a, b, attr) => { const A = reg(a), B = reg(b); g += `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" ${attr}/>`; };
+  const poly = (pts, attr) => { g += `<polygon points="${pts.map(p => reg(p).join(',')).join(' ')}" ${attr}/>`; };
+  // 벽
+  segs.forEach(s => { line(s.P0, pt(s, s.L, 0), 'stroke="#9e9e9e" stroke-width="4" vector-effect="non-scaling-stroke"'); reg(pt(s, s.L / 2, -400)); });
+  // 천장/바닥 투영
+  R.slabs.forEach(sl => {
+    const s = segs[sl.ref];
+    poly([pt(s, sl.A.x0, sl.B.x0), pt(s, sl.A.x1, sl.B.x0), pt(s, sl.A.x1, sl.B.x1), pt(s, sl.A.x0, sl.B.x1)],
+      `fill="none" stroke="${sl.kind === 'ceil' ? '#fff176' : '#a5d6a7'}" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"`);
+  });
+  // 스크린 + 파이프
+  R.faces.forEach(fr => {
+    const s = segs[fr.idx], A = fr.A, T = fr.T;
+    poly([pt(s, A.x0, T), pt(s, A.x1, T), pt(s, A.x1, T - t), pt(s, A.x0, T - t)], 'fill="#0d47a1" fill-opacity=".6" stroke="#4fc3f7" vector-effect="non-scaling-stroke"');
+    A.seams.slice(1, -1).forEach(x => line(pt(s, x, T), pt(s, x, T - t), 'stroke="#4fc3f7" vector-effect="non-scaling-stroke"'));
+    const zc = T - t - pipe / 2;
+    if (fr.main === 'A') {
+      A.pipes.forEach(p => poly([pt(s, p.c - pipe / 2, zc - pipe / 2), pt(s, p.c + pipe / 2, zc - pipe / 2), pt(s, p.c + pipe / 2, zc + pipe / 2), pt(s, p.c - pipe / 2, zc + pipe / 2)], 'fill="#ff9800"'));
+    } else {
+      poly([pt(s, A.x0, zc - pipe / 2), pt(s, A.x1, zc - pipe / 2), pt(s, A.x1, zc + pipe / 2), pt(s, A.x0, zc + pipe / 2)], 'fill="#ff9800" fill-opacity=".6"');
+    }
+  });
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const M = Math.max(maxX - minX, maxY - minY), pad = M * 0.04, fs = M / 30;
+  let padL = pad, padR = pad;
+  segs.forEach((s, i) => {
+    const vert = Math.abs(s.n[0]) > 0.5; // 세로로 놓인 벽
+    const q = reg(pt(s, s.L / 2, -fs * (vert ? 0.6 : 1.2)));
+    const anc = !vert ? 'middle' : (-s.n[0] > 0 ? 'start' : 'end');
+    const w = (faces[i].name.length + f(s.L).length + 1) * fs * 0.75;
+    if (anc === 'start') padR = Math.max(padR, q[0] + w - maxX + pad);
+    if (anc === 'end') padL = Math.max(padL, minX - (q[0] - w) + pad);
+    g += `<text x="${q[0]}" y="${q[1] + fs * 0.35}" font-size="${fs}" fill="#ddd" text-anchor="${anc}">${esc(faces[i].name)} ${f(s.L)}</text>`;
+  });
+  return `<div class="svgbox"><svg viewBox="${minX - padL} ${minY - pad - fs} ${maxX - minX + padL + padR} ${maxY - minY + 2 * pad + fs}">${g}</svg></div>
+    <div class="legend"><span><i style="background:#9e9e9e"></i>벽 구조면</span><span><i style="background:#4fc3f7"></i>스크린(캐비넷)</span><span><i style="background:#ff9800"></i>파이프</span>
+    ${R.slabs.length ? '<span><i style="background:#fff176"></i>천장</span><span><i style="background:#a5d6a7"></i>바닥 (점선=투영)</span>' : ''}</div>`;
+}
+
+function pipeTable(r) {
+  const L = r.main === 'A' ? r.A : r.B;
+  if (r.measure && r.main === 'A') {
+    const m = r.measure, h = num(state.common.pipe) / 2;
+    const list = L.pipes.map(p => ({ desc: p.desc, dw: m.fromEnd ? L.Lraw - p.c : p.c }));
+    if (m.fromEnd) list.reverse();
+    const farRef = m.fromEnd ? r.refs.aS : r.refs.aE;
+    return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>중심<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>중심<br><small>${esc(farRef)}에서</small></th></tr></thead><tbody>
+      ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff)}</td><td>${f(p.dw)}</td><td>${f(L.Lraw - p.dw)}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 주황색 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f(h)}mm.</div>`;
+  }
+  const ref = r.main === 'A' ? [r.refs.aS, r.refs.aE] : [r.refs.bS, r.refs.bE];
+  const h = num(state.common.pipe) / 2;
+  return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(ref[0])}에서</small></th><th>중심<br><small>${esc(ref[1])}에서</small></th><th>설치 구간</th></tr></thead><tbody>
+    ${L.pipes.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${p.fixed ? '' : ''}</td><td class="highlight">${f(p.c)}</td><td>${f(L.Lraw - p.c)}</td><td>${f(p.c - h)} ~ ${f(p.c + h)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+function faceResult(r, pipe) {
+  const oth = r.main === 'A' ? r.B : r.A;
+  const othAx = r.main === 'A' ? r.axis.B : r.axis.A;
+  const othRef = r.main === 'A' ? r.refs.bS : r.refs.aS;
+  const dp = r.depth;
+  const nPipe = (r.main === 'A' ? r.A : r.B).pipes.length;
+  const ord = r.order ? `<small style="color:${r.isBase ? '#81c784' : '#ffb74d'};font-weight:400"> · 시공 ${r.order}순위${r.isBase ? ' (기준 면)' : ` (${esc(r.measure.nbName)} 다음)`}</small>` : '';
+  return `<div class="card"><h2><span>${esc(r.title)}${ord}</span><span class="highlight" style="font-size:.85rem">${esc(r.mainLabel.split(' (')[0])} ${nPipe}본</span></h2>
+    <div class="summary-grid">
+      ${box(`캐비넷 외경 (${r.axis.A}×${r.axis.B})`, `${f(r.A.C)} × ${f(r.B.C)}`)}
+      ${box('파이프 1본 길이 (스크린 범위)', `${f(oth.C)} mm`, 'highlight')}
+      ${stBox(`${r.axis.A} 시작쪽 (${r.refs.aS})`, r.A.stS)}
+      ${stBox(`${r.axis.A} 끝쪽 (${r.refs.aE})`, r.A.stE)}
+      ${stBox(`${r.axis.B} ${r.kind === 'wall' ? '하단' : '벽쪽'} (${r.refs.bS})`, r.B.stS)}
+      ${stBox(`${r.axis.B} ${r.kind === 'wall' ? '상단' : '바깥'} (${r.refs.bE})`, r.B.stE)}
+      ${box('벽 ~ 스크린 앞면 T', `${f(dp.T)} mm`)}
+      ${box('파이프 뒤 여유 (벽~파이프)', dp.clr < 0 ? `${f(-dp.clr)} mm 부족` : `${f(dp.clr)} mm`, dp.clr < 0 ? 'st-err' : 'st-ok')}
+    </div>
+    ${elevSVG(r, pipe)}
+    <h3>${esc(r.mainLabel)} — 줄자 기준표</h3>
+    ${pipeTable(r)}
+    <div class="note">직교 방향 끝단(보조) 파이프 중심: ${othAx} ${esc(othRef)}에서 <b>${f(oth.x0 + pipe / 2)}</b> / <b>${f(oth.x1 - pipe / 2)}</b> mm<br>
+    파이프 깊이: 벽에서 ${f(dp.pipeBack)} ~ ${f(dp.pipeFront)} mm (앞면 = 스크린 앞면에서 ${f(dp.T - dp.pipeFront)} mm 뒤)</div>
+  </div>`;
+}
+
+function renderChain() {
+  const R = computeChain(state), pipe = num(state.common.pipe);
+  const all = [...R.faces, ...R.slabs];
+  const alerts = [];
+  all.forEach(r => {
+    [[r.A.stS, `${r.axis.A} 시작쪽`], [r.A.stE, `${r.axis.A} 끝쪽`], [r.B.stS, `${r.axis.B} 시작쪽`], [r.B.stE, `${r.axis.B} 끝쪽`]]
+      .forEach(([s, w]) => { if (s.lv === 'warn' || s.lv === 'err') alerts.push({ lv: s.lv, tx: `${r.name} ${w}: ${s.tx}` }); });
+    if (r.depth.clr < 0) alerts.push({ lv: 'err', tx: `${r.name}: 깊이 부족 — 파이프가 벽을 ${f(-r.depth.clr)}mm 파고듦` });
+  });
+  alerts.push(...pipeClashes(R, state));
+  R.faces.forEach(r => { if (r.measure && r.measure.cornerType === 'in' && !r.measure.coverByBase && r.order === 2)
+    alerts.push({ lv: 'warn', tx: `${r.name}: 먼저 시공하는 ${r.measure.nbName} 쪽을 덮도록 설정됨 → 코너 마감을 "${r.measure.nbName} 덮음"으로 바꾸는 것을 권장` }); });
+  let h = `<div class="card"><h2>평면도 (위에서 본 모습)</h2>${planSVG(R, state)}
+    <ul class="alerts" style="margin-top:8px">${alerts.length ? alerts.map(a => `<li class="st-${a.lv}">● ${esc(a.tx)}</li>`).join('') : '<li class="st-ok">● 모든 끝단·코너가 허용 오차 안에 들어옵니다.</li>'}</ul>
+    <div class="note">코너 규칙 — 내측(덮는 면): 상대 스크린 <b>뒷면선(T−t)</b>까지 진행 / 내측(맞대는 면): 상대 <b>앞면선(T)</b>에서 시작 / 외측(덮는 면): 벽 모서리 밖으로 상대 T만큼 / 외측(맞대는 면): 덮는 면 뒷면까지(T−t). 각 수치는 해당 코너 벽면에서 잰 값입니다.</div></div>`;
+  h += all.map(r => faceResult(r, pipe)).join('');
+  $('#results').innerHTML = h;
+}
+
+function arcSVG(r) {
+  const flip = r.concave ? 1 : -1;
+  const m = p => [p[0], -p[1] * flip];
+  const xs = [], ys = [];
+  const reg = p => { const q = m(p); xs.push(q[0]); ys.push(q[1]); return q; };
+  let g = '';
+  const pts = r.front.map(reg);
+  g += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="#4fc3f7" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
+  const A0 = reg(r.pipes[0].P), B0 = reg(r.pipes[r.pipes.length - 1].P);
+  g += `<line x1="${A0[0]}" y1="${A0[1]}" x2="${B0[0]}" y2="${B0[1]}" stroke="#bbb" stroke-dasharray="8 6" vector-effect="non-scaling-stroke"/>`;
+  const M0 = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1);
+  const fs = M0 / 32;
+  r.pipes.forEach((p, i) => {
+    const q = reg(p.P);
+    const foot = m([r.pipes[0].P[0] + r.u[0] * p.x, r.pipes[0].P[1] + r.u[1] * p.x]);
+    g += `<line x1="${foot[0]}" y1="${foot[1]}" x2="${q[0]}" y2="${q[1]}" stroke="#ffb74d" stroke-opacity=".5" vector-effect="non-scaling-stroke"/>`;
+    const rot = (p.alpha * 180 / Math.PI) * flip;
+    g += `<rect x="${q[0] - r.pipe / 2}" y="${q[1] - r.pipe / 2}" width="${r.pipe}" height="${r.pipe}" fill="#ff9800" transform="rotate(${rot} ${q[0]} ${q[1]})"/>`;
+    const lab = reg([p.P[0] + r.v[0] * fs * 1.6, p.P[1] + r.v[1] * fs * 1.6]);
+    g += `<text x="${lab[0]}" y="${lab[1] + fs * 0.3}" font-size="${fs * 0.8}" fill="#ffb74d" text-anchor="middle">${i + 1}</text>`;
+  });
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const M = Math.max(maxX - minX, maxY - minY), pad = M * 0.05;
+  g += `<text x="${(minX + maxX) / 2}" y="${maxY + pad * 0.9}" font-size="${fs}" fill="#888" text-anchor="middle">▼ 관람측</text>`;
+  return `<div class="svgbox"><svg viewBox="${minX - pad} ${minY - pad} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad + fs}">${g}</svg></div>
+    <div class="legend"><span><i style="background:#4fc3f7"></i>스크린 앞면</span><span><i style="background:#ff9800"></i>파이프</span><span><i style="background:#bbb"></i>기준선(현)</span></div>`;
+}
+
+function renderArc() {
+  const r = computeArc(state);
+  if (r.error) { $('#results').innerHTML = `<div class="card st-err">${esc(r.error)}</div>`; return; }
+  const pipe = r.pipe, B = r.Bl;
+  const yDir = r.concave ? '벽쪽(+)' : '관람측(+)';
+  let h = `<div class="card"><h2>곡면 산출 결과</h2>
+    <div class="summary-grid">
+      ${box('총 각도', `${deg(r.Th)}°`)}
+      ${box(r.kind === 'flex' ? '스크린 호 길이' : '캐비넷 폭 합', `${f(r.totalW)} mm`)}
+      ${box('스크린 앞면 현(직선) 길이', `${f(r.screenChord)} mm`)}
+      ${box('스크린 앞면 휨 깊이(새지타)', `${f(r.screenSag)} mm`)}
+      ${box('세로 높이 (캐비넷)', `${f(B.C)} mm`)}
+      ${box('파이프 1본 길이(세로 파이프)', `${f(B.C)} mm`, 'highlight')}
+      ${stBox('하단', B.stS)}${stBox('상단', B.stE)}
+    </div>
+    ${r.warns.length ? `<ul class="alerts" style="margin-top:8px">${r.warns.map(w => `<li class="st-${w.lv}">● ${esc(w.tx)}</li>`).join('')}</ul>` : ''}
+    ${arcSVG(r)}
+    <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'}) — 기준선 = 1번~마지막 파이프 중심 연결 직선</h3>
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>기준선 따라 X</th><th>기준선에서 ${yDir}</th><th>${r.kind === 'poly' ? '꺾임각' : '각도'}</th></tr></thead><tbody>
+      ${r.pipes.map(p => `<tr><td>${p.index}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.x)}</td><td class="highlight">${f(p.y)}</td><td>${r.kind === 'poly' ? (p.turn != null ? deg(p.turn) + '°' : '-') : deg(p.alpha + r.Th / 2) + '°'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="note">기준선 길이 ${f(r.chordP)} mm. 바닥에 1번·마지막 파이프 중심을 찍고 실을 띄운 뒤, X 위치에서 직각으로 Y만큼 ${r.concave ? '벽쪽' : '앞쪽'}에 파이프 중심을 찍으면 됩니다.</div>
+    ${r.kind === 'flex' ? `<h3>가로 벤딩 파이프 규격</h3>
+    <div class="table-container"><table><thead><tr><th>레이어</th><th>중심 반경</th><th>호 길이(절단)</th><th>현 길이</th><th>휨 깊이</th></tr></thead><tbody>
+      <tr><td>1열 (스크린 바로 뒤)</td><td class="highlight">${f(r.layer1.r)}</td><td>${f(r.layer1.arc)}</td><td>${f(r.layer1.chord)}</td><td>${f(r.layer1.sag)}</td></tr>
+      <tr><td>2열 (1열 파이프 뒤)</td><td class="highlight">${f(r.layer2.r)}</td><td>${f(r.layer2.arc)}</td><td>${f(r.layer2.chord)}</td><td>${f(r.layer2.sag)}</td></tr>
+    </tbody></table></div>
+    <div class="note">${state.arc.dir === 'h' ? '가로 벤딩 파이프가 주 파이프 → 1열 반경으로 벤딩, 세로 파이프는 그 뒤(2열)에 위 먹매김 위치로 설치.' : '세로 직관 파이프가 주 파이프(1열) → 가로 연결 파이프는 2열 반경으로 벤딩.'} 호 길이는 스크린 양끝 기준이며 여유 절단분은 별도.</div>`
+    : `<div class="note">평판 캐비넷: 가로 파이프는 조인트 위치에서 표의 꺾임각만큼 꺾어 용접하거나, 캐비넷별로 끊어 설치합니다.</div>`}
+    <h3>가로 파이프 높이 (바닥 기준)${state.arc.dir === 'h' ? ' — 주 파이프' : ' — 보조'}</h3>
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심 (하단에서)</th><th>중심 (상단에서)</th><th>설치 구간</th></tr></thead><tbody>
+      ${(state.arc.dir === 'h' ? B.pipes : [B.pipes[0], B.pipes[B.pipes.length - 1]].filter(Boolean)).map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(B.Lraw - p.c)}</td><td>${f(p.c - pipe / 2)} ~ ${f(p.c + pipe / 2)}</td></tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+  $('#results').innerHTML = h;
+}
+
+function renderPrintHead() {
+  const c = state.common, now = new Date();
+  const L = list => (list || []).map(x => `${f(num(x.s))}×${num(x.c)}`).join(' + ');
+  let rows = '';
+  if (state.mode === 'chain') {
+    const ch = state.chain;
+    rows = ch.faces.map((fc, i) => `<tr><td>${i + 1}. ${esc(fc.name)}</td><td>${f(num(fc.L))} × ${f(num(fc.H))}</td><td>${L(fc.cols)}</td><td>${L(fc.rows)}</td><td>${i < ch.corners.length ? (ch.corners[i].type === 'in' ? '내측' : '외측') + ' / ' + (ch.corners[i].method === 'miter' ? '45°' : esc((ch.corners[i].method === 'A' ? fc : ch.faces[i + 1]).name) + ' 덮음') : '-'}</td></tr>`).join('');
+    ['ceil', 'floor'].forEach(k => { const s = ch[k]; if (s.on) rows += `<tr><td>${k === 'ceil' ? '천장' : '바닥'}</td><td>깊이 ${f(num(s.depth))}</td><td>${L(s.cols)}</td><td>${L(s.rows)}</td><td>${s.method === 'wall' ? '벽이 덮음' : (k === 'ceil' ? '천장' : '바닥') + '이 덮음'}</td></tr>`; });
+    rows = `<table><thead><tr><th>면</th><th>벽 길이×높이</th><th>가로 구성</th><th>세로 구성</th><th>다음 코너</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } else {
+    const a = state.arc;
+    rows = `<table><tbody><tr><td>${a.shape === 'concave' ? '오목' : '볼록'} / ${a.kind === 'flex' ? '플렉시블' : '평판 꺾음'}</td><td>R ${f(num(a.R))}</td><td>가로 ${L(a.cols)}</td><td>세로 ${L(a.rows)}</td><td>높이 ${f(num(a.H))}</td></tr></tbody></table>`;
+  }
+  $('#printHead').innerHTML = `<h1>LED 프레임 파이프 위치 — ${esc(state.projectName || '(현장 이름 없음)')}</h1>
+    <div style="font-size:.8rem">출력 ${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} · 가이드삼정 김성혁 · v${APP_VERSION}<br>
+    파이프 ${num(c.pipe)}각 · 스크린 두께 ${f(num(c.t))} · ${c.depthMode === 'recess' ? `매립 D ${f(num(c.D))} / 조정 ${f(num(c.adj))}` : `벽부착 이격 ${f(num(c.standoff))}`} · T ${f(commonT(c))} · 편심 ${f(num(c.shift))}</div>${rows}`;
+}
+
+function renderResults() {
+  renderPrintHead();
+  const T = commonT(state.common), el = $('#Tcalc');
+  if (el) el.textContent = `${f(T)} mm`;
+  try { state.mode === 'chain' ? renderChain() : renderArc(); }
+  catch (e) { $('#results').innerHTML = `<div class="card st-err">계산 오류: ${esc(e.message)}</div>`; console.error(e); }
+}
+
+/* =========================================================
+ * 5. 이벤트
+ * ========================================================= */
+function readVal(el) {
+  if (el.type === 'checkbox') return el.checked;
+  if (el.dataset.num) return el.value === '' ? '' : Number(el.value);
+  return el.value;
+}
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.bind) return;
+  setPath(state, el.dataset.bind, readVal(el)); save(); renderResults();
+});
+document.addEventListener('change', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.bind) return;
+  setPath(state, el.dataset.bind, readVal(el)); save();
+  // 포커스가 빠지는 중에 DOM을 바꾸면 오류가 나므로 다음 틱에 다시 그림
+  if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'text') setTimeout(() => { renderForm(); renderResults(); }, 0);
+  else renderResults();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const d = b.dataset, ch = state.chain;
+  switch (d.act) {
+    case 'mode': state.mode = d.mode; break;
+    case 'preset': {
+      const p = PRESETS[d.key].make();
+      state.chain = p.chain; Object.assign(state.common, p.common); break;
+    }
+    case 'addItem': { const l = getPath(state, d.path); const last = l[l.length - 1]; l.push({ s: last ? last.s : 500, c: 1 }); break; }
+    case 'delItem': { const l = getPath(state, d.path); if (l.length <= 1) return alert('최소 1개 규격은 있어야 합니다.'); l.splice(+d.idx, 1); break; }
+    case 'addFace': {
+      const last = ch.faces[ch.faces.length - 1];
+      ch.faces.push(mkFace(`면${ch.faces.length + 1}`, 2000, last ? last.H : 2700, [it(500, 4)], clone(last ? last.rows : [it(500, 5)])));
+      ch.corners.push({ type: 'in', method: 'A' }); break;
+    }
+    case 'delFace': {
+      const i = +d.idx; ch.faces.splice(i, 1);
+      if (ch.corners.length) ch.corners.splice(Math.min(i, ch.corners.length - 1), 1);
+      ['ceil', 'floor'].forEach(k => { ch[k].ref = Math.min(num(ch[k].ref), ch.faces.length - 1); });
+      break;
+    }
+    case 'reset': if (!confirm('입력값을 모두 초기화할까요?')) return; state = defaultState(); break;
+    case 'projSave': {
+      let name = (state.projectName || '').trim();
+      if (!name) { name = (prompt('현장 이름을 입력하세요') || '').trim(); if (!name) return; state.projectName = name; }
+      const p = loadProjects();
+      if (p[name] && !confirm(`"${name}" 저장본을 덮어쓸까요?`)) return;
+      p[name] = { state: clone(state), savedAt: Date.now() }; storeProjects(p);
+      toast(`"${name}" 저장됨`); break;
+    }
+    case 'projLoad': {
+      const name = $('#projList')?.value, p = loadProjects();
+      if (!name || !p[name]) return;
+      if (!confirm(`"${name}"을(를) 불러올까요? 지금 입력 중인 값은 바뀝니다.`)) return;
+      state = normalizeState(clone(p[name].state)); state.projectName = name;
+      toast(`"${name}" 불러옴`); break;
+    }
+    case 'projDel': {
+      const name = $('#projList')?.value, p = loadProjects();
+      if (!name || !confirm(`"${name}" 저장본을 삭제할까요?`)) return;
+      delete p[name]; storeProjects(p); toast('삭제됨'); break;
+    }
+    case 'projNew': if (!confirm('새 현장을 시작할까요? (저장 안 한 입력은 사라집니다)')) return; state = defaultState(); break;
+    case 'share': shareLink(); return;
+    case 'print': renderPrintHead(); window.print(); return;
+    case 'install': if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; renderToolbar(); }); } return;
+    default: return;
+  }
+  save(); renderForm(); renderResults();
+});
+
+async function shareLink() {
+  const code = await encodeState(state);
+  const url = location.href.split('#')[0] + '#s=' + code;
+  const title = `LED 프레임 계산 - ${state.projectName || '현장'}`;
+  if (navigator.share) { try { await navigator.share({ title, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(url); toast('공유 링크를 복사했습니다. 카톡 등에 붙여넣으세요'); }
+  catch (e) { prompt('아래 링크를 복사하세요', url); }
+}
+
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; renderToolbar(); });
+window.addEventListener('beforeprint', renderPrintHead);
+
+(async function init() {
+  $('#ver').textContent = `v${APP_VERSION} · 가이드삼정 김성혁`;
+  const m = location.hash.match(/^#s=(.+)$/);
+  if (m) {
+    try {
+      state = normalizeState(await decodeState(m[1]));
+      save();
+      setTimeout(() => toast(`공유된 현장${state.projectName ? ` "${state.projectName}"` : ''}을 열었습니다. 남기려면 💾 저장`), 300);
+    } catch (e) { setTimeout(() => toast('공유 링크를 읽지 못했습니다'), 300); }
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  renderForm(); renderResults();
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
