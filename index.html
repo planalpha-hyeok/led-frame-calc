@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>LED 프레임 파이프 계산기</title>
 <meta name="description" content="LED 캐비넷 프레임(각파이프) 위치 계산기 - 평면·ㄱ·ㄷ·천장/바닥·곡면" />
-<meta name="theme-color" content="#1e1e1e" />
+<meta name="theme-color" content="#000000" />
 <script>
   // 저장된 테마 → 없으면 기기 설정 따라감
   (function () { try { var t = localStorage.getItem('ledFrameCalc.theme'); if (!t) t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; document.documentElement.dataset.theme = t; } catch (e) {} })();
@@ -17,106 +17,173 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="LED프레임" />
 <style>
+  /* iOS 시스템 색 기준 (receipt_report와 같은 계열) */
   :root, [data-theme="dark"] {
-    --primary: #1976d2; --bg: #1e1e1e; --card-bg: #2d2d2d; --card-bg2: #252525;
-    --text: #f0f0f0; --text2: #dddddd; --muted: #9e9e9e; --border: #444; --head: #90caf9;
-    --accent: #ff9800; --input-bg: #1e1e1e; --btn: #3a3a3a; --th: #383838; --tab: #2a2a2a; --tab-text: #bbb;
-    --corner-bg: #1f2a30; --corner-line: #4fc3f7; --alert-line: #383838; --row-hi: #3a2020;
-    --ok: #81c784; --warn: #ffb74d; --err: #ef5350; --info: #90caf9; --shadow: rgba(0,0,0,.5);
+    --primary: #0a84ff; --primary-tint: rgba(10,132,255,.16);
+    --bg: #000000; --card-bg: #1c1c1e; --card-bg2: #2c2c2e;
+    --text: #ffffff; --text2: #d1d1d6; --muted: #8e8e93; --sep: #38383a; --border: #38383a; --head: #ffffff;
+    --input-bg: #2c2c2e; --btn: #2c2c2e; --th: #2c2c2e; --seg-bg: #1c1c1e; --seg-on: #636366; --seg-on-text: #ffffff;
+    --corner-bg: #1c1c1e; --corner-line: #0a84ff; --row-hi: #3a1d1b;
+    --ok: #30d158; --warn: #ff9f0a; --err: #ff453a; --info: #0a84ff; --shadow: rgba(0,0,0,.5);
+    --ok-tint: rgba(48,209,88,.16); --err-tint: rgba(255,69,58,.16); --gray: #636366;
   }
   [data-theme="light"] {
-    --primary: #1565c0; --bg: #eef1f5; --card-bg: #ffffff; --card-bg2: #f6f8fb;
-    --text: #1b1f24; --text2: #333a44; --muted: #6b7280; --border: #d3d9e1; --head: #1565c0;
-    --accent: #d84f00; --input-bg: #ffffff; --btn: #eef1f5; --th: #eef2f7; --tab: #e3e8ee; --tab-text: #4b5563;
-    --corner-bg: #eaf5fb; --corner-line: #0288d1; --alert-line: #e5e7eb; --row-hi: #fde8e8;
-    --ok: #2e7d32; --warn: #b45309; --err: #c62828; --info: #1565c0; --shadow: rgba(0,0,0,.18);
+    --primary: #007aff; --primary-tint: rgba(0,122,255,.1);
+    --bg: #f2f2f7; --card-bg: #ffffff; --card-bg2: #f2f2f7;
+    --text: #1c1c1e; --text2: #3a3a3c; --muted: #8e8e93; --sep: #e5e5ea; --border: #d1d1d6; --head: #1c1c1e;
+    --input-bg: #f2f2f7; --btn: #f2f2f7; --th: #f2f2f7; --seg-bg: #e3e3e8; --seg-on: #ffffff; --seg-on-text: #1c1c1e;
+    --corner-bg: #ffffff; --corner-line: #007aff; --row-hi: #fdeceb;
+    --ok: #248a3d; --warn: #c93400; --err: #d70015; --info: #007aff; --shadow: rgba(0,0,0,.08);
+    --ok-tint: rgba(52,199,89,.14); --err-tint: rgba(255,59,48,.1); --gray: #8e8e93;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 10px 10px 80px; line-height: 1.4; transition: background .2s, color .2s; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding: 12px 14px 90px; line-height: 1.45; transition: background .2s, color .2s; -webkit-text-size-adjust: 100%; }
   .container { max-width: 600px; margin: 0 auto; }
-  .card { background: var(--card-bg); border-radius: 10px; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
-  [data-theme="light"] .card { box-shadow: 0 1px 3px var(--shadow); }
-  .topbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-  h1 { font-size: 1.1rem; color: var(--head); flex: 1; line-height: 1.3; }
-  .theme-btn { flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1.2rem; cursor: pointer; }
-  h2 { font-size: 0.95rem; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-  .author { font-size: 0.68rem; color: var(--muted); font-weight: 400; margin-left: 4px; white-space: nowrap; }
-  .manual { margin-bottom: 12px; }
-  .manual summary { cursor: pointer; font-weight: 700; font-size: 0.95rem; color: var(--head); list-style: none; }
+  .ico { width: 18px; height: 18px; flex-shrink: 0; vertical-align: middle; }
+
+  /* 카드 */
+  .card { background: var(--card-bg); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 2px var(--shadow); }
+  h2 { font-size: 1.02rem; font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--head); }
+  h2 small { font-size: .74rem; font-weight: 500; }
+  h3 { font-size: .9rem; font-weight: 700; margin: 18px 0 8px; color: var(--head); }
+  .badge-pill { flex-shrink: 0; font-size: .76rem; font-weight: 700; color: var(--primary); background: var(--primary-tint); border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
+
+  /* 상단 헤더 */
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px; }
+  .topbar .logo { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
+  .topbar .ttl { flex: 1; min-width: 0; }
+  h1 { font-size: 1.05rem; font-weight: 700; color: var(--text); line-height: 1.25; }
+  .author { display: block; font-size: .72rem; color: var(--muted); font-weight: 400; }
+  .icon-btn { flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; border: none; background: var(--btn); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .icon-btn .ico { width: 20px; height: 20px; }
+
+  /* 세그먼트 탭 */
+  .tabs { display: flex; gap: 2px; margin-bottom: 14px; position: sticky; top: 0; z-index: 20; padding: 2px; border-radius: 10px; background: var(--seg-bg); box-shadow: 0 0 0 6px var(--bg); }
+  .tab { flex: 1; padding: 7px 6px; font-size: .9rem; font-weight: 600; border-radius: 8px; border: none; background: transparent; color: var(--muted); cursor: pointer; line-height: 1.25; }
+  .tab small { font-size: .7rem; font-weight: 500; }
+  .tab.on { background: var(--seg-on); color: var(--seg-on-text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  /* 사용 설명서 */
+  .manual { padding: 0; }
+  .manual summary { cursor: pointer; font-weight: 600; font-size: .92rem; color: var(--text); list-style: none; display: flex; align-items: center; gap: 10px; padding: 13px 16px; }
+  .manual summary .ico { color: var(--primary); }
   .manual summary::-webkit-details-marker { display: none; }
-  .manual summary::after { content: ' ▼'; font-size: 0.7rem; }
-  .manual[open] summary::after { content: ' ▲'; }
-  .manual h4 { font-size: 0.85rem; color: var(--warn); margin: 14px 0 4px; }
-  .manual p, .manual li { font-size: 0.82rem; color: var(--text2); line-height: 1.6; }
+  .manual summary::after { content: ''; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .2s; }
+  .manual[open] summary::after { transform: rotate(-135deg); }
+  .manual > :not(summary) { margin-left: 16px; margin-right: 16px; }
+  .manual > :last-child { margin-bottom: 16px; }
+  .manual h4 { font-size: .86rem; color: var(--text); margin: 16px 0 4px; }
+  .manual p, .manual li { font-size: .83rem; color: var(--text2); line-height: 1.65; }
   .manual ol, .manual ul { padding-left: 18px; }
   .manual b { color: var(--text); }
-  .manual .tip { background: var(--corner-bg); border-left: 3px solid var(--corner-line); padding: 6px 8px; margin: 6px 0; font-size: 0.8rem; color: var(--text2); }
-  .cornerfig { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
-  .cornerfig svg { width: 120px; height: 120px; flex-shrink: 0; background: #141414; border-radius: 6px; }
-  .cornerfig .desc { font-size: 0.78rem; color: var(--text2); line-height: 1.5; }
-  h3 { font-size: 0.88rem; margin: 14px 0 6px; color: var(--head); }
-  .form-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; }
-  .form-group label { font-size: 0.86rem; font-weight: 500; flex: 1; min-width: 0; }
-  .input-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .manual .tip { background: var(--primary-tint); border-radius: 8px; padding: 8px 10px; margin: 8px 16px; font-size: .8rem; color: var(--text2); }
+
+  /* 입력 행: 왼쪽 라벨 / 오른쪽 입력, 행 사이 구분선 */
+  .form-group { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 6px 0; border-top: 1px solid var(--sep); }
+  h2 + .form-group, .form-group:first-child, .corner .ttl + .form-group { border-top: none; }
+  .form-group label { font-size: .88rem; font-weight: 500; flex: 1; min-width: 0; color: var(--text); }
+  .input-wrap { display: flex; align-items: center; flex-shrink: 0; max-width: 64%; }
+  .has-unit { position: relative; }
+  .has-unit .unit { position: absolute; right: 10px; pointer-events: none; }
+  .form-hint { font-size: .75rem; color: var(--muted); margin: -6px 0 0; padding-bottom: 10px; line-height: 1.5; }
+  .form-hint b { color: var(--primary); }
+  .unit { font-size: .8rem; color: var(--muted); }
   /* 16px 이상이어야 아이폰에서 입력할 때 화면이 확대되지 않음 */
-  input, select { padding: 8px 9px; font-size: 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--input-bg); color: var(--text); }
-  input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: var(--primary); }
-  .form-group input[type=number], .form-group input[type=text] { width: 104px; text-align: right; }
-  .form-group select { max-width: 210px; }
-  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--primary); }
-  .form-hint { font-size: 0.74rem; color: var(--muted); margin-top: -4px; margin-bottom: 8px; text-align: right; }
-  .unit { font-size: 0.8rem; color: var(--muted); min-width: 24px; }
-  .dynamic-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  input, select { height: 40px; padding: 0 10px; font-size: 16px; border: 1px solid transparent; border-radius: 9px; background: var(--input-bg); color: var(--text); }
+  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+  input::placeholder { color: var(--muted); }
+  select { -webkit-appearance: none; appearance: none; padding-right: 30px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238e8e93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; text-overflow: ellipsis; }
+  .form-group input[type=number], .form-group input[type=text] { width: 124px; text-align: right; }
+  .has-unit input[type=number], .has-unit input[type=text] { padding-right: 38px; }
+  .form-group select { max-width: 100%; }
+  input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--primary); }
+  .check { display: flex; align-items: center; gap: 10px; font-size: .95rem; font-weight: 600; min-height: 32px; }
+
+  /* 규격 목록 (폭 × 수량) */
+  .sub { font-size: .76rem; font-weight: 600; color: var(--muted); margin: 14px 0 8px; padding-top: 12px; border-top: 1px solid var(--sep); }
+  .dynamic-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
   .dynamic-row input { flex: 1; min-width: 0; text-align: right; }
-  .dynamic-row .x { color: var(--muted); font-size: 0.85rem; }
-  .btn { padding: 8px 12px; font-size: 0.84rem; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: var(--btn); color: var(--text); }
-  .btn:active { filter: brightness(.9); }
-  .btn.sm { padding: 5px 9px; font-size: 0.76rem; }
-  .btn.danger { background: #c62828; border: none; color: #fff; }
-  .btn.del { width: 52px; flex-shrink: 0; background: #d32f2f; border: none; color: #fff; padding: 9px 0; border-radius: 6px; cursor: pointer; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 12px; position: sticky; top: 0; z-index: 20; padding: 6px 0; background: var(--bg); }
-  .tab { flex: 1; padding: 10px 6px; font-size: 0.88rem; font-weight: 600; border-radius: 8px; border: 1px solid var(--border); background: var(--tab); color: var(--tab-text); cursor: pointer; }
-  .tab.on { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .presets { display: flex; flex-wrap: wrap; gap: 6px; }
-  .presets .btn { flex: 1 1 30%; }
-  .corner { background: var(--corner-bg); border: 1px dashed var(--corner-line); border-radius: 10px; padding: 10px 12px; margin: -4px 0 12px; }
-  .corner .ttl { font-size: 0.82rem; color: var(--corner-line); margin-bottom: 6px; font-weight: 600; }
-  .face-head { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
-  .face-head input { flex: 1; font-weight: 600; }
-  .sub { font-size: 0.8rem; color: var(--muted); margin: 10px 0 6px; }
-  .check { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; font-weight: 600; }
-  .table-container { overflow-x: auto; margin-top: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: center; }
-  th, td { border: 1px solid var(--border); padding: 7px 4px; }
-  th { background: var(--th); font-weight: 600; }
-  .highlight { color: var(--accent); font-weight: bold; font-size: 0.92rem; }
-  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
-  .summary-box { background: var(--card-bg2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 5px; text-align: center; }
-  .summary-box .title { font-size: 0.72rem; color: var(--muted); }
-  .summary-box .val { font-size: 0.9rem; font-weight: bold; color: var(--head); margin-top: 2px; }
+  .dynamic-row .x { color: var(--muted); font-size: .9rem; }
+
+  /* 버튼 */
+  .btn { min-height: 40px; padding: 8px 14px; font-size: .86rem; font-weight: 600; border-radius: 10px; border: none; cursor: pointer; background: var(--btn); color: var(--text); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn:active, .icon-btn:active, .tab:active, .fab:active { opacity: .7; }
+  .btn.sm { min-height: 32px; padding: 5px 12px; font-size: .78rem; border-radius: 8px; }
+  .btn.pri { background: var(--primary); color: #fff; }
+  .btn.danger { background: var(--err-tint); color: var(--err); }
+  .btn.del { width: 40px; height: 40px; min-height: 0; padding: 0; flex-shrink: 0; background: var(--err-tint); color: var(--err); }
+  .btn.link { background: none; color: var(--primary); padding: 6px 0; min-height: 0; }
+  .btn.wide { width: 100%; margin-bottom: 14px; background: var(--card-bg); color: var(--primary); box-shadow: 0 1px 2px var(--shadow); min-height: 48px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .presets .btn { flex: 1 1 30%; padding: 8px 6px; }
+
+  /* 면 · 코너 */
+  .face-head { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+  .face-head .no { font-size: .78rem; font-weight: 700; color: var(--primary); background: var(--primary-tint); border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+  .face-head input { flex: 1; min-width: 0; font-weight: 600; }
+  .corner { background: var(--corner-bg); border-radius: 14px; padding: 12px 16px; margin: -6px 0 14px 18px; border-left: 3px solid var(--corner-line); box-shadow: 0 1px 2px var(--shadow); }
+  .corner .ttl { font-size: .84rem; color: var(--corner-line); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .cornerfig { display: flex; gap: 12px; align-items: center; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--sep); }
+  .cornerfig svg { width: 112px; height: 112px; flex-shrink: 0; background: #141414; border-radius: 10px; }
+  .cornerfig .desc { font-size: .78rem; color: var(--text2); line-height: 1.55; }
+
+  /* 결과 요약: 항목명 / 값 목록 */
+  .summary-grid { margin-top: 4px; }
+  .kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-top: 1px solid var(--sep); }
+  .kv:first-child { border-top: none; }
+  .kv .k { font-size: .8rem; color: var(--muted); flex-shrink: 1; min-width: 0; }
+  .kv .v { font-size: .88rem; font-weight: 600; text-align: right; max-width: 62%; }
+  .kv .v .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 6px; vertical-align: 1px; }
+  .highlight { color: var(--primary); font-weight: 700; }
   .st-ok { color: var(--ok) !important; } .st-warn { color: var(--warn) !important; }
   .st-err { color: var(--err) !important; } .st-info { color: var(--info) !important; }
-  .svgbox { background: #141414; border-radius: 8px; margin-top: 8px; padding: 4px; }
+
+  /* 도면 */
+  .svgbox { background: #141414; border-radius: 12px; margin-top: 10px; padding: 6px; }
   .svgbox svg { width: 100%; height: auto; display: block; max-height: 520px; }
-  .alerts { list-style: none; font-size: 0.82rem; }
-  .alerts li { padding: 4px 0; border-bottom: 1px solid var(--alert-line); }
-  .note { font-size: 0.77rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
-  .legend { font-size: 0.74rem; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 10px; }
-  .legend i { display: inline-block; width: 12px; height: 4px; vertical-align: middle; margin-right: 3px; }
-  .insets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .legend { font-size: .74rem; color: var(--muted); margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .legend i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+  .insets { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .insets .svgbox svg { max-height: 220px; }
-  .insets .note { margin-top: 4px; font-size: 0.72rem; }
-  td.tp { white-space: nowrap; font-size: 0.78rem; }
-  .fab { position: fixed; right: 14px; bottom: 18px; z-index: 30; border: none; border-radius: 26px; padding: 12px 18px; font-size: 0.9rem; font-weight: 700; background: var(--primary); color: #fff; box-shadow: 0 4px 14px var(--shadow); cursor: pointer; }
-  .fab .badge { display: inline-block; margin-left: 6px; background: #fff; color: #c62828; border-radius: 10px; padding: 0 7px; font-size: 0.78rem; }
-  .toolbar .btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .toolbar .btnrow .btn { flex: 1 1 22%; padding: 9px 4px; }
-  .toolbar .btn.pri { background: var(--primary); border-color: var(--primary); }
-  .toolbar .loadrow { display: flex; gap: 6px; margin-top: 8px; }
+  .insets .note { margin-top: 4px; font-size: .72rem; }
+
+  /* 경고 목록 */
+  .alerts { list-style: none; font-size: .83rem; margin-top: 10px; }
+  .alerts li { padding: 7px 0 7px 16px; border-top: 1px solid var(--sep); position: relative; }
+  .alerts li:first-child { border-top: none; }
+  .alerts li::before { content: ''; position: absolute; left: 2px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .note { font-size: .77rem; color: var(--muted); margin-top: 8px; line-height: 1.55; }
+
+  /* 표: 글자 줄바꿈 없이 가로 스크롤, No. 열 고정 */
+  .table-container { overflow-x: auto; margin-top: 8px; border-radius: 10px; border: 1px solid var(--sep); -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; text-align: center; }
+  th, td { padding: 9px 8px; white-space: nowrap; border-bottom: 1px solid var(--sep); }
+  tbody tr:last-child td { border-bottom: none; }
+  th { background: var(--th); font-weight: 600; font-size: .76rem; color: var(--text2); line-height: 1.35; white-space: normal; word-break: keep-all; min-width: 3.2em; }
+  th small { font-weight: 400; color: var(--muted); }
+  tbody tr { background: var(--card-bg); }
+  td small { color: var(--muted); }
+  th:first-child, td:first-child { position: sticky; left: 0; z-index: 1; }
+  th:first-child { background: var(--th); }
+  td:first-child { background: inherit; color: var(--muted); font-weight: 600; }
+  td.tp { font-size: .8rem; }
+
+  /* 떠 있는 버튼 · 알림 */
+  .fab { position: fixed; right: 16px; bottom: 20px; z-index: 30; border: none; border-radius: 26px; padding: 13px 20px; font-size: .9rem; font-weight: 700; background: var(--primary); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; display: inline-flex; align-items: center; }
+  .fab .badge { display: inline-block; margin-left: 8px; background: #ff3b30; color: #fff; border-radius: 10px; min-width: 20px; padding: 0 6px; font-size: .76rem; line-height: 20px; text-align: center; }
+  .toolbar { padding: 12px 16px; }
+  .toolbar .namerow input { width: 100%; text-align: left; }
+  .toolbar .btnrow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .toolbar .btnrow .btn { flex-direction: column; gap: 3px; padding: 8px 2px; font-size: .74rem; min-height: 56px; }
+  .toolbar .btnrow .btn .ico { width: 20px; height: 20px; }
+  .toolbar .btnrow .btn:not(.pri) { color: var(--primary); }
+  .toolbar .loadrow { display: flex; gap: 8px; margin-top: 10px; }
   .toolbar .loadrow select { flex: 1; min-width: 0; }
-  .toast { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 0.85rem; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,.5); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; text-align: center; }
+  .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: rgba(44,44,46,.95); color: #fff; padding: 10px 18px; border-radius: 20px; font-size: .85rem; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,.3); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90%; text-align: center; }
   .toast.on { opacity: 1; }
-  .ver { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 6px; }
+  .ver { font-size: .7rem; color: var(--muted); text-align: center; margin-top: 8px; }
   .print-only { display: none; }
   .print-head h1 { color: #000; font-size: 1.1rem; text-align: left; margin-bottom: 4px; }
   .print-head table { margin-top: 6px; }
@@ -126,13 +193,17 @@
     .container { max-width: none; }
     .tabs, #form, .manual, .no-print, .toast, .fab, .topbar { display: none !important; }
     .print-only { display: block; }
-    .card { background: #fff; border: 1px solid #aaa; color: #000; }
-    h2 { color: #000; } h3 { color: #0d47a1; }
-    .summary-box { background: #fff; border-color: #aaa; break-inside: avoid; }
-    .summary-box .title { color: #444; } .summary-box .val { color: #000; }
-    th { background: #eee; color: #000; } th, td { border-color: #aaa; color: #000; }
+    .card { background: #fff; border: 1px solid #aaa; color: #000; box-shadow: none; }
+    h2, h3 { color: #000; }
+    .badge-pill { color: #000; background: none; border: 1px solid #aaa; }
+    .kv { border-color: #ddd; break-inside: avoid; }
+    .kv .k { color: #444; } .kv .v { color: #000; }
+    .table-container { overflow: visible; border-color: #aaa; }
+    th { background: #eee; color: #000; } th, td { border: 1px solid #aaa; color: #000; white-space: normal; }
+    th:first-child, td:first-child { position: static; }
+    tbody tr { background: #fff; }
     tr { break-inside: avoid; }
-    .highlight { color: #b35400 !important; }
+    .highlight { color: #0d47a1 !important; }
     .note, .legend { color: #333; }
     .st-ok { color: #2e7d32 !important; } .st-warn { color: #b35400 !important; } .st-err { color: #c62828 !important; } .st-info { color: #1565c0 !important; }
     .svgbox { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -143,14 +214,15 @@
 </head>
 <body>
 <div class="container">
-  <div class="topbar no-print"><h1>LED 프레임 파이프 설치 계산기 <small class="author">가이드삼정 김성혁</small></h1><button class="theme-btn" data-act="theme" id="themeBtn" aria-label="밝기 모드 전환"></button></div>
+  <div class="card topbar no-print"><img class="logo" src="icons/icon-192.png" alt=""><div class="ttl"><h1>LED 프레임 파이프 계산기</h1><small class="author">가이드삼정 김성혁</small></div><button class="icon-btn" data-act="theme" id="themeBtn" aria-label="밝기 모드 전환"></button></div>
   <div id="printHead" class="print-only print-head"></div>
   <div class="tabs">
     <button class="tab" data-act="mode" data-mode="chain">면 조합<br><small>평면 · ㄱ · ㄷ · 천장/바닥</small></button>
     <button class="tab" data-act="mode" data-mode="arc">곡면<br><small>플렉시블 · 꺾음</small></button>
   </div>
+  <div id="toolbar" class="no-print"></div>
   <details class="card manual">
-    <summary>📖 사용 설명서 (처음이면 꼭 읽어보세요)</summary>
+    <summary><span id="manualIco"></span>사용 설명서 <small style="color:var(--muted);font-weight:400">처음이면 꼭 읽어보세요</small></summary>
 
     <h4>1. 이 계산기가 하는 일</h4>
     <p>LED 캐비넷 구성(폭×수량, 높이×단수)과 현장 실측값을 넣으면 <b>각파이프를 어디에 세울지(중심 위치)</b>를 줄자로 바로 잴 수 있는 숫자로 뽑아줍니다. 평면뿐 아니라 ㄱ·ㄷ 코너, 천장·바닥, 곡면까지 계산합니다.</p>
@@ -216,7 +288,7 @@
       <li><b>상태 칸</b>: 초록=정상, 주황=틈·돌출(확인 필요), 빨강=간섭(설치 불가). 허용 오차는 공통 설정에서 바꿀 수 있습니다.</li>
       <li><b>줄자 기준표</b>: 파이프 <b>중심</b> 위치를 양쪽 기준(예: 좌측벽 코너에서 / 우측벽 코너에서)으로 보여줍니다. 편한 쪽에서 재세요.</li>
       <li><b>설치 구간</b>: 파이프 한쪽 면 ~ 반대쪽 면 위치입니다.</li>
-      <li><b>📏 줄자</b>: 줄자는 5.5m면 <b>5m씩 끊어</b> 쓰는 것으로 계산합니다(7.5m → 7m). 그보다 먼 파이프가 있으면 이 칸이 생깁니다. ◀는 시작 쪽에서, ▶는 끝 쪽에서, <b>[5000]+635</b>는 5000 지점에 먹을 놓고 거기서 635를 재라는 뜻입니다.</li>
+      <li><b>줄자 칸</b>: 줄자는 5.5m면 <b>5m씩 끊어</b> 쓰는 것으로 계산합니다(7.5m → 7m). 그보다 먼 파이프가 있으면 이 칸이 생깁니다. ◀는 시작 쪽에서, ▶는 끝 쪽에서, <b>[5000]+635</b>는 5000 지점에 먹을 놓고 거기서 635를 재라는 뜻입니다.</li>
       <li><b>파이프 뒤 여유</b>가 빨강이면 깊이가 모자라 파이프가 벽에 닿습니다.</li>
     </ul>
 
@@ -235,16 +307,16 @@
     <ul>
       <li>ㄷ은 <b>중앙 벽(정면)부터</b> 시공하고 옆 벽으로 나오는 것이 기본입니다. "먼저 시공할 기준 면"이 자동이면 가운데 면, ㄱ이면 코너를 덮는 면이 기준이 됩니다.</li>
       <li>결과는 <b>시공 순위대로</b> 나옵니다. 기준 면이 아닌 면은 파이프 번호가 <b>코너 쪽부터 1번</b>입니다.</li>
-      <li>옆 벽은 구조 벽이 아니라 <b>이미 설치된 정면 스크린 앞면</b>에 줄자를 대고 잽니다(주황 숫자). 정면에서 생긴 오차가 옆 벽으로 넘어가지 않고, 남는 길이는 바깥 끝에서 정리됩니다.</li>
+      <li>옆 벽은 구조 벽이 아니라 <b>이미 설치된 정면 스크린 앞면</b>에 줄자를 대고 잽니다(파란 숫자). 정면에서 생긴 오차가 옆 벽으로 넘어가지 않고, 남는 길이는 바깥 끝에서 정리됩니다.</li>
       <li>이 방식이면 코너 마감은 <b>기준 면이 덮음</b>이어야 합니다. 반대로 설정하면 경고가 나옵니다.</li>
     </ul>
 
     <h4>12. 현장 저장 · 공유 · 인쇄</h4>
     <ul>
-      <li><b>현장 이름</b>을 적고 <b>💾 저장</b>하면 이 기기에 저장됩니다. 아래 목록에서 골라 <b>불러오기</b>.</li>
-      <li><b>🔗 공유</b>: 지금 입력값이 담긴 주소를 만듭니다. 카톡 등으로 보내면 받는 사람이 같은 결과를 봅니다(받은 쪽은 💾 저장해야 남습니다).</li>
-      <li><b>🖨 인쇄·PDF</b>: 입력 요약 + 도면 + 줄자 기준표를 A4로 출력합니다. 휴대폰은 인쇄 화면에서 "PDF로 저장"을 고르세요.</li>
-      <li><b>홈 화면에 설치</b>: 안드로이드는 상단 "📲 앱 설치" 버튼(또는 크롬 메뉴 → 홈 화면에 추가), 아이폰은 사파리 공유 버튼 → "홈 화면에 추가". 한 번 열어두면 <b>인터넷이 없어도</b> 동작합니다.</li>
+      <li><b>현장 이름</b>을 적고 <b>저장</b>을 누르면 이 기기에 저장됩니다. 아래 목록에서 골라 <b>불러오기</b>.</li>
+      <li><b>공유</b>: 지금 입력값이 담긴 주소를 만듭니다. 카톡 등으로 보내면 받는 사람이 같은 결과를 봅니다(받은 쪽도 저장을 눌러야 남습니다).</li>
+      <li><b>인쇄·PDF</b>: 입력 요약 + 도면 + 줄자 기준표를 A4로 출력합니다. 휴대폰은 인쇄 화면에서 "PDF로 저장"을 고르세요.</li>
+      <li><b>홈 화면에 설치</b>: 안드로이드는 "앱으로 설치" 버튼(또는 크롬 메뉴 → 홈 화면에 추가), 아이폰은 사파리 공유 버튼 → "홈 화면에 추가". 한 번 열어두면 <b>인터넷이 없어도</b> 동작합니다.</li>
     </ul>
 
     <h4>13. 주의</h4>
@@ -255,6 +327,7 @@
 
     <h4>업데이트 내역</h4>
     <ul>
+      <li><b>v2.8</b>: 화면 디자인 정리 (iOS 스타일 카드·세그먼트 탭·선 아이콘, 결과 요약 목록형, 표 가로 스크롤 · No. 열 고정, 줄자 기준 숫자 파랑)</li>
       <li><b>v2.7.1</b>: 줄자는 5m 단위로 끊어 재는 것으로 변경 (5.5m → 5m)</li>
       <li><b>v2.7</b>: 줄자 길이(기본 5.5m) 반영 — 닿지 않으면 반대쪽 끝·중간 기준점에서 재도록 안내</li>
       <li><b>v2.6.2</b>: 외측 코너 끝 파이프가 상대 스크린과 겹치던 문제 수정, 파이프-스크린 간섭 검사 추가</li>
@@ -269,7 +342,6 @@
       <li><b>v1</b>: 매립 평면 계산</li>
     </ul>
   </details>
-  <div id="toolbar" class="no-print"></div>
   <div id="form"></div>
   <div id="results"></div>
   <div class="no-print" style="text-align:center;margin:16px 0 30px"><button class="btn sm" data-act="reset">전체 초기화</button><div class="ver" id="ver"></div></div>
@@ -290,6 +362,19 @@ const fa = rad => { const v = Math.round(Math.abs(rad) * 180 / Math.PI * 2) / 2;
 const deg = rad => r1(rad * 180 / Math.PI);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
+// 선 아이콘 (이모지 대신)
+const ICON_PATH = {
+  save: '<path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/>',
+  share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
+  print: '<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  book: '<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+};
+const icon = k => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATH[k]}</svg>`;
 function getPath(obj, path) { return path.split('.').reduce((o, k) => o?.[k], obj); }
 function setPath(obj, path, val) {
   const ks = path.split('.'); const last = ks.pop();
@@ -367,7 +452,7 @@ function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.7.2';
+const APP_VERSION = '2.8';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -734,7 +819,7 @@ function computeArc(st) {
 /* =========================================================
  * 3. 폼 렌더링
  * ========================================================= */
-const field = (label, ctrl, unit = '') => `<div class="form-group"><label>${label}</label><div class="input-wrap">${ctrl}${unit ? `<span class="unit">${unit}</span>` : ''}</div></div>`;
+const field = (label, ctrl, unit = '') => `<div class="form-group"><label>${label}</label><div class="input-wrap${unit ? ' has-unit' : ''}">${ctrl}${unit ? `<span class="unit">${unit}</span>` : ''}</div></div>`;
 const hint = s => `<div class="form-hint">${s}</div>`;
 const numIn = (path, v, ph = '') => `<input type="number" data-bind="${path}" data-num="1" value="${esc(v)}" placeholder="${ph}">`;
 const txtIn = (path, v) => `<input type="text" data-bind="${path}" value="${esc(v)}">`;
@@ -745,8 +830,8 @@ function listEd(path, list, sizeLabel, cntLabel) {
       <input type="number" data-bind="${path}.${i}.s" data-num="1" value="${esc(x.s)}" placeholder="${sizeLabel}(mm)">
       <span class="x">×</span>
       <input type="number" data-bind="${path}.${i}.c" data-num="1" value="${esc(x.c)}" placeholder="${cntLabel}">
-      <button class="btn del" data-act="delItem" data-path="${path}" data-idx="${i}">삭제</button>
-    </div>`).join('') + `<button class="btn sm" data-act="addItem" data-path="${path}">+ 규격 추가</button>`;
+      <button class="btn del" data-act="delItem" data-path="${path}" data-idx="${i}" aria-label="삭제" title="삭제">${icon('x')}</button>
+    </div>`).join('') + `<button class="btn link" data-act="addItem" data-path="${path}">${icon('plus')}규격 추가</button>`;
 }
 const END_OPTS = [['opening', '개구부 벽 (매립, 여백 균등)'], ['free', '자유단 (벽에 안 붙음)']];
 const alignOpts = (s, e) => [['auto', '자동 (코너 우선)'], ['center', '중앙'], ['start', `${s} 붙임`], ['end', `${e} 붙임`], ['manual', `${s} 여백 직접 입력`]];
@@ -760,12 +845,12 @@ function commonForm() {
     ${c.depthMode === 'recess'
       ? field('매립 마감 유효 깊이 D', numIn('common.D', c.D), 'mm') + field('스크린 깊이 조정', numIn('common.adj', c.adj), 'mm') + hint('-2: 2mm 안으로 매립, +2: 2mm 돌출, 0: 플랫')
       : field('벽 ~ 파이프 뒷면 이격', numIn('common.standoff', c.standoff), 'mm') + hint('브라켓/앵커 등 파이프 뒤 공간')}
-    ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc" style="color:var(--head)"></b> (코너 계산의 핵심값)')}
+    ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc"></b> (코너 계산의 핵심값)')}
     ${field('중간 조인트 편심 (좌/하 -, 우/상 +)', numIn('common.shift', c.shift), 'mm')}
     ${hint('양 끝단 파이프는 고정, 중간 조인트 파이프만 이동')}
     ${field('픽셀 피치 (P)', numIn('common.pitch', c.pitch), 'mm')}
     ${field('내측 코너 겹침 픽셀 수', numIn('common.ovPx', c.ovPx), 'px')}
-    ${hint('→ 덮는 면이 상대 스크린 앞면 뒤로 <b id="ovcalc" style="color:var(--head)"></b> 겹침 (보통 1~3픽셀)')}
+    ${hint('→ 덮는 면이 상대 스크린 앞면 뒤로 <b id="ovcalc"></b> 겹침 (보통 1~3픽셀)')}
     ${field('코너·여백 허용 오차 ±', numIn('common.tol', c.tol), 'mm')}
     ${field('줄자 길이', sel('common.tape', c.tape, [[3500, '3.5m'], [5500, '5.5m'], [7500, '7.5m'], [10000, '10m'], [99999, '제한 없음 (레이저)']], true))}
     ${hint(`실제 사용 ${f1(tapeUse(num(c.tape)) / 1000)}m 단위로 끊어 잽니다. 넘는 파이프는 반대쪽 끝이나 중간 기준점에서 재도록 안내`)}
@@ -775,7 +860,7 @@ function commonForm() {
 function faceForm(fc, i, n) {
   const p = `chain.faces.${i}`;
   return `<div class="card">
-    <div class="face-head"><span style="font-size:.8rem;color:var(--head)">면 ${i + 1}</span>${txtIn(p + '.name', fc.name)}
+    <div class="face-head"><span class="no">면 ${i + 1}</span>${txtIn(p + '.name', fc.name)}
       ${n > 1 ? `<button class="btn sm danger" data-act="delFace" data-idx="${i}">면 삭제</button>` : ''}</div>
     ${field('벽 길이 (구조면 기준 실측)', numIn(p + '.L', fc.L), 'mm')}
     ${field('높이 (바닥~천장 또는 개구부)', numIn(p + '.H', fc.H), 'mm')}
@@ -792,7 +877,7 @@ function faceForm(fc, i, n) {
 
 function cornerForm(cn, i, A, B) {
   const p = `chain.corners.${i}`;
-  return `<div class="corner"><div class="ttl">↳ 코너 ${i + 1}: ${esc(A)} → ${esc(B)}</div>
+  return `<div class="corner"><div class="ttl">코너 ${i + 1} · ${esc(A)} → ${esc(B)}</div>
     ${field('코너 종류', sel(p + '.type', cn.type, [['in', '내측 90° (실내 ㄱ/ㄷ 안쪽)'], ['out', '외측 90° (기둥·모서리 감싸기)']]))}
     ${field('마감 방식', sel(p + '.method', cn.method, [['A', `${esc(A)} 덮음 (코너까지)`], ['B', `${esc(B)} 덮음 (코너까지)`], ['miter', '45° 사선 캐비넷']]))}
     ${cornerFig(cn, A, B)}
@@ -844,7 +929,7 @@ function cornerFig(cn, A, B) {
     desc = cn.type === 'in'
       ? `<b>${esc(cov)}</b> 스크린이 코너까지 가서 <b>${esc(but)}</b> 스크린 앞면 뒤로 <b>${f1(cornerOverlap(state.common))}mm(${num(state.common.ovPx)}픽셀)</b>만 겹치고, ${esc(but)} 스크린은 ${esc(cov)} 스크린 <b>앞면에 붙여</b> 끝납니다.`
       : `<b>${esc(cov)}</b> 스크린이 모서리 밖으로 뻗어 <b>${esc(but)}</b> 스크린 옆면을 가립니다. ${esc(but)} 스크린은 ${esc(cov)} 뒤에 붙습니다.`;
-    desc += `<br><span style="color:var(--head)">밝은 파랑 = 끝까지 가는(덮는) 면</span>`;
+    desc += `<br><span style="color:var(--primary)">밝은 파랑 = 끝까지 가는(덮는) 면</span>`;
     const ch = state.chain, bi = baseIndex(ch), bn = ch.faces[bi]?.name;
     if (cn.type === 'in' && (bn === A || bn === B) && cov !== bn) desc += `<br><span style="color:var(--warn)">※ 기준 면(${esc(bn)})을 먼저 시공하면 "${esc(bn)} 덮음"이 맞습니다</span>`;
   }
@@ -889,7 +974,7 @@ function chainForm() {
     h += faceForm(fc, i, n);
     if (i < n - 1) h += cornerForm(ch.corners[i], i, fc.name, ch.faces[i + 1].name);
   });
-  h += `<button class="btn" style="width:100%;margin-bottom:12px" data-act="addFace">+ 오른쪽에 면 추가 (코너)</button>`;
+  h += `<button class="btn wide" data-act="addFace">${icon('plus')}오른쪽에 면 추가 (코너)</button>`;
   h += slabForm('ceil', '천장') + slabForm('floor', '바닥');
   return h;
 }
@@ -911,7 +996,7 @@ function arcForm() {
   </div>`;
   segs.forEach((sg, i) => {
     const q = `${p}.segs.${i}`;
-    h += `<div class="card"><div class="face-head"><span style="font-size:.85rem;color:var(--head);font-weight:700">구간 ${i + 1}</span><span style="flex:1"></span>
+    h += `<div class="card"><div class="face-head"><span class="no">구간 ${i + 1}</span><span style="flex:1"></span>
       ${segs.length > 1 ? `<button class="btn sm danger" data-act="delSeg" data-idx="${i}">구간 삭제</button>` : ''}</div>
       ${field('형태', sel(q + '.type', sg.type, [['arc', '곡면'], ['flat', '평면 (직선)']]))}
       ${sg.type === 'arc' ? field('곡면 방향', sel(q + '.shape', sg.shape, [['concave', '오목 (관람자 쪽으로 감쌈)'], ['convex', '볼록 (바깥으로 튀어나옴)']]))
@@ -921,7 +1006,7 @@ function arcForm() {
     </div>`;
     if (i < segs.length - 1) h += `<div class="note" style="text-align:center;margin:-6px 0 8px">↓ 접선으로 이어짐</div>`;
   });
-  h += `<button class="btn" style="width:100%;margin-bottom:12px" data-act="addSeg">+ 오른쪽에 구간 추가</button>`;
+  h += `<button class="btn wide" data-act="addSeg">${icon('plus')}오른쪽에 구간 추가</button>`;
   return h;
 }
 
@@ -931,17 +1016,17 @@ function renderToolbar() {
   const names = Object.keys(projs).sort((a, b) => (projs[b].savedAt || 0) - (projs[a].savedAt || 0));
   const dt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
   $('#toolbar').innerHTML = `<div class="card toolbar">
-    <div class="form-group"><label>현장 이름</label><div class="input-wrap"><input type="text" data-bind="projectName" value="${esc(state.projectName)}" placeholder="예: OO빌딩 로비" style="width:190px;text-align:left"></div></div>
+    <div class="namerow"><input type="text" data-bind="projectName" value="${esc(state.projectName)}" placeholder="현장 이름 (예: OO빌딩 로비)" aria-label="현장 이름"></div>
     <div class="btnrow">
-      <button class="btn pri" data-act="projSave">💾 저장</button>
-      <button class="btn" data-act="share">🔗 공유</button>
-      <button class="btn" data-act="print">🖨 인쇄·PDF</button>
-      <button class="btn" data-act="projNew">＋ 새 현장</button>
+      <button class="btn pri" data-act="projSave">${icon('save')}저장</button>
+      <button class="btn" data-act="share">${icon('share')}공유</button>
+      <button class="btn" data-act="print">${icon('print')}인쇄·PDF</button>
+      <button class="btn" data-act="projNew">${icon('plus')}새 현장</button>
     </div>
-    ${names.length ? `<div class="loadrow"><select id="projList">${names.map(n => `<option value="${esc(n)}">${esc(n)} (${dt(projs[n].savedAt)})</option>`).join('')}</select>
+    ${names.length ? `<div class="loadrow"><select id="projList" aria-label="저장된 현장">${names.map(n => `<option value="${esc(n)}">${esc(n)} (${dt(projs[n].savedAt)})</option>`).join('')}</select>
       <button class="btn" data-act="projLoad">불러오기</button><button class="btn danger" data-act="projDel">삭제</button></div>`
-      : '<div class="note">저장된 현장이 없습니다. 이름을 적고 💾 저장을 누르세요.</div>'}
-    ${installPrompt ? '<button class="btn" style="width:100%;margin-top:8px" data-act="install">📲 앱으로 설치 (홈 화면)</button>' : ''}
+      : '<div class="note">저장된 현장이 없습니다. 이름을 적고 저장을 누르세요.</div>'}
+    ${installPrompt ? `<button class="btn" style="width:100%;margin-top:10px;color:var(--primary)" data-act="install">${icon('download')}앱으로 설치 (홈 화면)</button>` : ''}
   </div>`;
 }
 
@@ -954,8 +1039,8 @@ function renderForm() {
 /* =========================================================
  * 4. 결과 렌더링 (표 + 도면)
  * ========================================================= */
-const box = (title, val, cls = '') => `<div class="summary-box"><div class="title">${title}</div><div class="val ${cls}">${val}</div></div>`;
-const stBox = (title, st) => box(title, esc(st.tx), `st-${st.lv}`);
+const box = (title, val, cls = '') => `<div class="kv"><span class="k">${title}</span><span class="v ${cls}">${val}</span></div>`;
+const stBox = (title, st) => box(title, `<i class="dot"></i>${esc(st.tx)}`, `st-${st.lv}`);
 
 function elevSVG(r, pipe) {
   const A = r.A, B = r.B, W = A.Lraw, H = B.Lraw;
@@ -1115,7 +1200,7 @@ function tapePlan(vals, total) {
 const tapeCell = p => p.side === 'S' ? `◀ ${f(p.d)}` : p.side === 'E' ? `${f(p.d)} ▶` : `<b>[${f(p.mark)}]</b>+${f(p.d)}`;
 function tapeNote(tp, sName, eName) {
   if (!tp.need) return '';
-  return `<div class="note"><b>📏 줄자(${f1(tp.tape / 1000)}m → ${f1(tp.lim / 1000)}m씩 사용)로 재는 법</b>: ◀ = ${esc(sName)}에서, ▶ = ${esc(eName)}에서 잽니다.${tp.marks.length
+  return `<div class="note"><b>줄자(${f1(tp.tape / 1000)}m → ${f1(tp.lim / 1000)}m씩 사용)로 재는 법</b>: ◀ = ${esc(sName)}에서, ▶ = ${esc(eName)}에서 잽니다.${tp.marks.length
     ? ` <b>[숫자]</b>는 중간 기준점: ${esc(sName)}에서 ${tp.marks.map(m => f(m)).join(', ')} 지점에 먼저 먹을 놓고(${f(tp.step)}씩 이어 재기, 가능하면 레이저 사용) 그 점에서 + 거리만큼 잽니다.` : ''}</div>`;
 }
 
@@ -1127,15 +1212,15 @@ function pipeTable(r) {
     if (m.fromEnd) list.reverse();
     const farRef = m.fromEnd ? r.refs.aS : r.refs.aE;
     const tp = tapePlan(list.map(p => p.dw - m.refOff), L.Lraw - m.refOff);
-    return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>중심<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>중심<br><small>${esc(farRef)}에서</small></th>${tp.need ? '<th>📏 줄자</th>' : ''}</tr></thead><tbody>
+    return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>중심<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>중심<br><small>${esc(farRef)}에서</small></th>${tp.need ? '<th>줄자</th>' : ''}</tr></thead><tbody>
       ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff)}</td><td>${f(p.dw)}</td><td>${f(L.Lraw - p.dw)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}</tr>`).join('')}
     </tbody></table></div>
-    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 주황색 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f1(h)}mm.</div>${tapeNote(tp, m.nbName + ' 스크린 앞면', farRef)}`;
+    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 파란 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f1(h)}mm.</div>${tapeNote(tp, m.nbName + ' 스크린 앞면', farRef)}`;
   }
   const ref = r.main === 'A' ? [r.refs.aS, r.refs.aE] : [r.refs.bS, r.refs.bE];
   const h = num(state.common.pipe) / 2;
   const tp = tapePlan(L.pipes.map(p => p.c), L.Lraw);
-  return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(ref[0])}에서</small></th><th>중심<br><small>${esc(ref[1])}에서</small></th>${tp.need ? '<th>📏 줄자</th>' : ''}<th>설치 구간</th></tr></thead><tbody>
+  return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(ref[0])}에서</small></th><th>중심<br><small>${esc(ref[1])}에서</small></th>${tp.need ? '<th>줄자</th>' : ''}<th>설치 구간</th></tr></thead><tbody>
     ${L.pipes.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(L.Lraw - p.c)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}<td>${f(p.c - h)} ~ ${f(p.c + h)}</td></tr>`).join('')}
   </tbody></table></div>${tapeNote(tp, ref[0], ref[1])}`;
 }
@@ -1146,8 +1231,8 @@ function faceResult(r, pipe) {
   const othRef = r.main === 'A' ? r.refs.bS : r.refs.aS;
   const dp = r.depth;
   const nPipe = (r.main === 'A' ? r.A : r.B).pipes.length;
-  const ord = r.order ? `<small style="color:${r.isBase ? 'var(--ok)' : 'var(--warn)'};font-weight:400"> · 시공 ${r.order}순위${r.isBase ? ' (기준 면)' : ` (${esc(r.measure.nbName)} 다음)`}</small>` : '';
-  return `<div class="card"><h2><span>${esc(r.title)}${ord}</span><span class="highlight" style="font-size:.85rem">${esc(r.mainLabel.split(' (')[0])} ${nPipe}본</span></h2>
+  const ord = r.order ? `<br><small style="color:${r.isBase ? 'var(--ok)' : 'var(--muted)'}">시공 ${r.order}순위${r.isBase ? ' (기준 면)' : ` (${esc(r.measure.nbName)} 다음)`}</small>` : '';
+  return `<div class="card"><h2><span>${esc(r.title)}${ord}</span><span class="badge-pill">${esc(r.mainLabel.split(' (')[0])} ${nPipe}본</span></h2>
     <div class="summary-grid">
       ${box(`캐비넷 외경 (${r.axis.A}×${r.axis.B})`, `${f(r.A.C)} × ${f(r.B.C)}`)}
       ${box('파이프 1본 길이 (스크린 범위)', `${f(oth.C)} mm`, 'highlight')}
@@ -1179,7 +1264,7 @@ function renderChain() {
   R.faces.forEach(r => { if (r.measure && r.measure.cornerType === 'in' && !r.measure.coverByBase && r.order === 2)
     alerts.push({ lv: 'warn', tx: `${r.name}: 먼저 시공하는 ${r.measure.nbName} 쪽을 덮도록 설정됨 → 코너 마감을 "${r.measure.nbName} 덮음"으로 바꾸는 것을 권장` }); });
   let h = `<div class="card"><h2>평면도 (위에서 본 모습)</h2>${planSVG(R, state)}
-    <ul class="alerts" style="margin-top:8px">${alerts.length ? alerts.map(a => `<li class="st-${a.lv}">● ${esc(a.tx)}</li>`).join('') : '<li class="st-ok">● 모든 끝단·코너가 허용 오차 안에 들어옵니다.</li>'}</ul>
+    <ul class="alerts">${alerts.length ? alerts.map(a => `<li class="st-${a.lv}">${esc(a.tx)}</li>`).join('') : '<li class="st-ok">모든 끝단·코너가 허용 오차 안에 들어옵니다.</li>'}</ul>
     <div class="note">코너 규칙 — 내측(덮는 면): 상대 스크린 <b>앞면선에서 겹침만큼 뒤(T−겹침)</b>까지 진행 / 내측(맞대는 면): 상대 <b>앞면선(T)</b>에서 시작 / 외측(덮는 면): 벽 모서리 밖으로 상대 T만큼 / 외측(맞대는 면): 덮는 면 뒷면까지(T−t). 각 수치는 해당 코너 벽면에서 잰 값입니다.</div></div>`;
   h += all.map(r => faceResult(r, pipe)).join('');
   $('#results').innerHTML = h;
@@ -1236,10 +1321,10 @@ function renderArc() {
       ${box('파이프 1본 길이(세로 파이프)', `${f(B.C)} mm`, 'highlight')}
       ${stBox('하단', B.stS)}${stBox('상단', B.stE)}
     </div>
-    ${r.warns.length ? `<ul class="alerts" style="margin-top:8px">${r.warns.map(w => `<li class="st-${w.lv}">● ${esc(w.tx)}</li>`).join('')}</ul>` : ''}
+    ${r.warns.length ? `<ul class="alerts">${r.warns.map(w => `<li class="st-${w.lv}">${esc(w.tx)}</li>`).join('')}</ul>` : ''}
     ${arcSVG(r)}
     <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
-    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th>${tpA.need ? '<th>📏 X 줄자</th>' : ''}<th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th>${tpA.need ? '<th>X 줄자</th>' : ''}<th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
       ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td>${tpA.need ? `<td class="tp">${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
     </tbody></table></div>${tapeNote(tpA, '1번 파이프', '마지막 파이프')}
     <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
@@ -1367,8 +1452,8 @@ function setTheme(t) {
 }
 function updateThemeUI() {
   const light = document.documentElement.dataset.theme === 'light';
-  const b = $('#themeBtn'); if (b) { b.textContent = light ? '🌙' : '☀️'; b.title = light ? '어두운 모드로' : '밝은 모드로'; }
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', light ? '#eef1f5' : '#1e1e1e');
+  const b = $('#themeBtn'); if (b) { b.innerHTML = icon(light ? 'moon' : 'sun'); b.title = light ? '어두운 모드로' : '밝은 모드로'; }
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', light ? '#f2f2f7' : '#000000');
 }
 // 결과 ↔ 입력 오가기 버튼
 function resultsTop() { const r = $('#results'); return r ? r.getBoundingClientRect().top + scrollY - 60 : 0; }
@@ -1377,7 +1462,7 @@ function updateFab() {
   const b = $('#fab'); if (!b) return;
   const inResults = scrollY + 200 >= resultsTop();
   const n = document.querySelectorAll('#results .alerts li.st-warn, #results .alerts li.st-err').length;
-  b.innerHTML = inResults ? '입력 ↑' : `결과 보기 ↓${n ? `<span class="badge">⚠ ${n}</span>` : ''}`;
+  b.innerHTML = inResults ? '입력 ↑' : `결과 보기 ↓${n ? `<span class="badge">${n}</span>` : ''}`;
 }
 addEventListener('scroll', () => { clearTimeout(updateFab._t); updateFab._t = setTimeout(updateFab, 80); }, { passive: true });
 // 숫자 칸을 누르면 기존 값 전체 선택 (바로 덮어쓰기)
@@ -1402,11 +1487,12 @@ window.addEventListener('beforeprint', renderPrintHead);
     try {
       state = normalizeState(await decodeState(m[1]));
       save();
-      setTimeout(() => toast(`공유된 현장${state.projectName ? ` "${state.projectName}"` : ''}을 열었습니다. 남기려면 💾 저장`), 300);
+      setTimeout(() => toast(`공유된 현장${state.projectName ? ` "${state.projectName}"` : ''}을 열었습니다. 남기려면 저장을 누르세요`), 300);
     } catch (e) { setTimeout(() => toast('공유 링크를 읽지 못했습니다'), 300); }
     history.replaceState(null, '', location.pathname + location.search);
   }
   updateThemeUI();
+  $('#manualIco').innerHTML = icon('book');
   renderForm(); renderResults();
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
