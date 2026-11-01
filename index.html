@@ -166,7 +166,7 @@
     <h4>6. 마감 방식 (코너에서 누가 끝까지 가나)</h4>
     <p>두 스크린이 코너에서 만날 때, 한쪽은 <b>코너 끝까지 길게(덮음)</b> 가고 다른 쪽은 그 스크린 <b>앞면에 붙여서 짧게(맞댐)</b> 끝납니다.</p>
     <ul>
-      <li><b>"OO 덮음 (코너까지)"</b>: OO면이 코너 안쪽 끝까지 가고, 상대 면은 OO 스크린 앞면에 붙습니다.</li>
+      <li><b>"OO 덮음 (코너까지)"</b>: OO면이 코너까지 가고, 상대 면은 OO 스크린 앞면에 붙습니다. 이때 OO면은 상대 스크린 앞면 뒤로 <b>1~3픽셀만</b> 겹치게 맞춥니다. 공통 설정의 <b>픽셀 피치 × 겹침 픽셀 수</b>로 정합니다(예: P2.5 × 2px = 5mm).</li>
       <li><b>45° 사선 캐비넷</b>: 양쪽 캐비넷 옆면이 45°로 깎여 앞모서리끼리 맞닿는 전용 캐비넷일 때만 고르세요.</li>
     </ul>
     <div class="tip">어느 쪽을 덮게 할지는 보통 <b>잘 보이는 면(정면)</b>을 덮는 쪽으로 해서 화면이 끊기지 않게 합니다. 코너 카드 아래 그림이 선택에 따라 바뀌니 보면서 고르세요.</div>
@@ -227,6 +227,7 @@
 
     <h4>업데이트 내역</h4>
     <ul>
+      <li><b>v2.4</b>: 내측 코너 겹침을 픽셀 단위(피치 × 1~3픽셀)로 계산</li>
       <li><b>v2.3</b>: 웹앱(홈 화면 설치·오프라인), 현장별 저장, 공유 링크, 인쇄·PDF</li>
       <li><b>v2.2</b>: ㄷ 중앙 벽 먼저 시공 → 옆 벽은 설치된 스크린 앞면 기준 측정</li>
       <li><b>v2.1</b>: 코너 설명 그림, 사용 설명서</li>
@@ -290,27 +291,27 @@ const PRESETS = {
   } },
   L: { label: 'ㄱ 코너', make() {
     const ch = chainBase();
-    ch.faces = [mkFace('좌측벽', 2500, 2700, [it(500, 4)], [it(500, 5)]), mkFace('정면', 3079, 2700, [it(500, 6)], [it(500, 5)])];
+    ch.faces = [mkFace('좌측벽', 2500, 2700, [it(500, 4)], [it(500, 5)]), mkFace('정면', 3135, 2700, [it(500, 6)], [it(500, 5)])];
     ch.corners = [{ type: 'in', method: 'B' }];
     return { common: { depthMode: 'surface' }, chain: ch };
   } },
   U: { label: 'ㄷ 코너', make() {
     const ch = chainBase();
-    ch.faces = [mkFace('좌측벽', 2500, 2700, [it(500, 4)], [it(500, 5)]), mkFace('정면', 3158, 2700, [it(500, 6)], [it(500, 5)]), mkFace('우측벽', 2500, 2700, [it(500, 4)], [it(500, 5)])];
+    ch.faces = [mkFace('좌측벽', 2500, 2700, [it(500, 4)], [it(500, 5)]), mkFace('정면', 3270, 2700, [it(500, 6)], [it(500, 5)]), mkFace('우측벽', 2500, 2700, [it(500, 4)], [it(500, 5)])];
     ch.corners = [{ type: 'in', method: 'B' }, { type: 'in', method: 'A' }];
     return { common: { depthMode: 'surface' }, chain: ch };
   } },
   UCF: { label: 'ㄷ + 천장·바닥', make() {
     const ch = chainBase();
-    ch.faces = [mkFace('좌측벽', 2500, 3158, [it(500, 4)], [it(500, 6)]), mkFace('정면', 3158, 3158, [it(500, 6)], [it(500, 6)]), mkFace('우측벽', 2500, 3158, [it(500, 4)], [it(500, 6)])];
+    ch.faces = [mkFace('좌측벽', 2500, 3280, [it(500, 4)], [it(500, 6)]), mkFace('정면', 3270, 3280, [it(500, 6)], [it(500, 6)]), mkFace('우측벽', 2500, 3280, [it(500, 4)], [it(500, 6)])];
     ch.corners = [{ type: 'in', method: 'B' }, { type: 'in', method: 'A' }];
-    ch.ceil = mkSlab(true, 2500, [it(480, 6)], [it(500, 4)]); ch.ceil.ref = 1;
-    ch.floor = mkSlab(true, 2500, [it(480, 6)], [it(500, 4)]); ch.floor.ref = 1;
+    ch.ceil = mkSlab(true, 2500, [it(500, 6)], [it(500, 4)]); ch.ceil.ref = 1; ch.ceil.method = 'slab';
+    ch.floor = mkSlab(true, 2500, [it(500, 6)], [it(500, 4)]); ch.floor.ref = 1; ch.floor.method = 'slab';
     return { common: { depthMode: 'surface' }, chain: ch };
   } },
   WC: { label: '벽 + 천장 (단면 ㄱ)', make() {
     const ch = chainBase();
-    ch.faces = [mkFace('정면', 3000, 2579, [it(500, 6)], [it(500, 5)])];
+    ch.faces = [mkFace('정면', 3000, 2635, [it(500, 6)], [it(500, 5)])];
     ch.ceil = mkSlab(true, 1640, [it(500, 6)], [it(500, 3)]);
     return { common: { depthMode: 'surface' }, chain: ch };
   } },
@@ -321,13 +322,15 @@ const PRESETS = {
     return { common: { depthMode: 'surface' }, chain: ch };
   } },
 };
-const DEFAULT_COMMON = { pipe: 50, t: 61, depthMode: 'recess', D: 120, adj: -2, standoff: 29, shift: 0, tol: 2 };
+const DEFAULT_COMMON = { pipe: 50, t: 61, depthMode: 'recess', D: 120, adj: -2, standoff: 29, shift: 0, tol: 2, pitch: 2.5, ovPx: 2 };
+// 내측 코너에서 덮는 면이 맞대는 면 앞면 뒤로 겹치는 길이 (픽셀 피치 × 픽셀 수, 스크린 두께 이하)
+function cornerOverlap(c) { return Math.max(0, Math.min(num(c.t), num(c.pitch) * num(c.ovPx))); }
 const DEFAULT_ARC = { R: 3000, shape: 'concave', kind: 'flex', minR: '', H: 2400, bottomEnd: 'free', topEnd: 'free', dir: 'h', alignB: 'auto', manB: 0, cols: [it(320, 15)], rows: [it(160, 15)] };
 function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -399,7 +402,7 @@ function ownT(o, c) { return (o.T === '' || o.T == null) ? commonT(c) : num(o.T)
  */
 const IDEAL = {
   opening: () => 0, free: () => 0,
-  'in-cover': s => s.To - s.t, 'in-butt': s => s.To,
+  'in-cover': s => s.To - (s.ov ?? s.t), 'in-butt': s => s.To,
   'out-cover': s => -s.To, 'out-butt': s => -(s.To - s.t),
   'in-miter': s => s.To, 'out-miter': s => -s.To,
 };
@@ -411,11 +414,14 @@ function endStatus(s, e, tol) {
   switch (s.kind) {
     case 'opening': return e < -tol ? { lv: 'err', tx: `벽 간섭 ${f(-e)}mm (캐비넷이 개구부보다 큼)` } : { lv: 'ok', tx: `여백 ${f(e)}mm` };
     case 'free': return { lv: 'ok', tx: `끝단 여유 ${f(e)}mm` };
-    case 'in-cover':
+    case 'in-cover': {
+      const ov = s.ov ?? s.t;
       if (e < -tol) return { lv: 'err', tx: `${who} 벽 간섭 ${f(-e)}mm` };
-      if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm (${who} 스크린 옆이 벌어짐)` };
-      if (d < -tol) return { lv: 'info', tx: `${who} 스크린 뒤로 ${f(-d)}mm 더 들어감 (그만큼 가려짐)` };
-      return { lv: 'ok', tx: `코너 정합 (${who} 뒤로 진행)` };
+      if (d > ov + tol) return { lv: 'warn', tx: `코너 틈 ${f(d - ov)}mm (${who} 스크린 옆이 벌어짐)` };
+      if (d > tol) return { lv: 'warn', tx: `겹침 부족: ${who} 앞면 뒤로 ${f(ov - d)}mm만 겹침 (목표 ${f(ov)}mm)` };
+      if (d < -tol) return { lv: 'info', tx: `${who} 스크린 뒤로 ${f(ov - d)}mm 겹침 (목표 ${f(ov)}mm보다 ${f(-d)}mm 더 가려짐)` };
+      return { lv: 'ok', tx: `코너 정합 (${who} 앞면 뒤로 ${f(ov)}mm 겹침)` };
+    }
     case 'out-cover':
       if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm (${who} 측면 노출)` };
       if (d < -tol) return { lv: 'warn', tx: `코너 돌출 ${f(-d)}mm` };
@@ -469,12 +475,12 @@ const NAMES_COL = { start: '1열 시작 끝단', joint: (a, b) => `${a}-${b}열 
 const NAMES_ROW = { start: '최하단 끝단', joint: (a, b) => `하${a}-${b}단 조인트`, end: () => '최상단 끝단' };
 const NAMES_SLAB_Y = { start: '벽쪽 끝단', joint: (a, b) => `벽쪽 ${a}-${b}줄 조인트`, end: () => '바깥 끝단' };
 
-function cornerSpec(corner, role, To, t, label) {
+function cornerSpec(corner, role, To, t, label, ov) {
   const k = corner.method === 'miter' ? `${corner.type}-miter` : `${corner.type}-${corner.method === role ? 'cover' : 'butt'}`;
-  return { kind: k, To, t, label };
+  return { kind: k, To, t, label, ov };
 }
 // 벽-천장/바닥 코너 (항상 내측). method 'wall' = 벽 스크린이 끝까지, 'slab' = 천장/바닥이 끝까지
-function slabSpec(method, who, To, t, label) { return { kind: `in-${method === who ? 'cover' : 'butt'}`, To, t, label }; }
+function slabSpec(method, who, To, t, label, ov) { return { kind: `in-${method === who ? 'cover' : 'butt'}`, To, t, label, ov }; }
 
 function depthInfo(T, t, pipe) {
   const back = T - t - pipe; // 벽~파이프 뒷면
@@ -483,7 +489,7 @@ function depthInfo(T, t, pipe) {
 
 function computeChain(st) {
   const c = st.common, ch = st.chain;
-  const pipe = num(c.pipe), t = num(c.t), shift = num(c.shift), tol = num(c.tol);
+  const pipe = num(c.pipe), t = num(c.t), shift = num(c.shift), tol = num(c.tol), ov = cornerOverlap(c);
   const faces = ch.faces, n = faces.length;
   const Ts = faces.map(fc => ownT(fc, c));
   const ceilOn = !!ch.ceil.on, floorOn = !!ch.floor.on;
@@ -493,10 +499,10 @@ function computeChain(st) {
 
   faces.forEach((fc, i) => {
     const prev = faces[i - 1], next = faces[i + 1];
-    const sS = i === 0 ? { kind: ch.startEnd } : cornerSpec(ch.corners[i - 1], 'B', Ts[i - 1], t, prev.name);
-    const sE = i === n - 1 ? { kind: ch.endEnd } : cornerSpec(ch.corners[i], 'A', Ts[i + 1], t, next.name);
-    const sB = floorOn ? slabSpec(ch.floor.method, 'wall', Tf, t, '바닥') : { kind: ch.bottomEnd };
-    const sT = ceilOn ? slabSpec(ch.ceil.method, 'wall', Tc, t, '천장') : { kind: ch.topEnd };
+    const sS = i === 0 ? { kind: ch.startEnd } : cornerSpec(ch.corners[i - 1], 'B', Ts[i - 1], t, prev.name, ov);
+    const sE = i === n - 1 ? { kind: ch.endEnd } : cornerSpec(ch.corners[i], 'A', Ts[i + 1], t, next.name, ov);
+    const sB = floorOn ? slabSpec(ch.floor.method, 'wall', Tf, t, '바닥', ov) : { kind: ch.bottomEnd };
+    const sT = ceilOn ? slabSpec(ch.ceil.method, 'wall', Tc, t, '천장', ov) : { kind: ch.topEnd };
     const A = layout1D({ ...base, Lraw: num(fc.L), sizes: expand(fc.cols), sS, sE, align: fc.alignA, manual: fc.manA, names: NAMES_COL });
     const B = layout1D({ ...base, Lraw: num(fc.H), sizes: expand(fc.rows).reverse(), sS: sB, sE: sT, align: fc.alignB, manual: fc.manB, names: NAMES_ROW });
     const endRef = (k, isStart) => k === 'opening' ? (isStart ? '시작쪽 개구부 벽' : '끝쪽 개구부 벽') : (isStart ? '시작쪽 바깥 끝' : '끝쪽 바깥 끝');
@@ -521,11 +527,11 @@ function computeChain(st) {
     const ref = Math.min(Math.max(0, num(sl.ref)), n - 1);
     const fr = faces[ref];
     let sS, sE;
-    if (ref > 0) sS = ch.corners[ref - 1].type === 'in' ? slabSpec(sl.method, 'slab', Ts[ref - 1], t, faces[ref - 1].name) : { kind: 'free' };
+    if (ref > 0) sS = ch.corners[ref - 1].type === 'in' ? slabSpec(sl.method, 'slab', Ts[ref - 1], t, faces[ref - 1].name, ov) : { kind: 'free' };
     else sS = { kind: ch.startEnd };
-    if (ref < n - 1) sE = ch.corners[ref].type === 'in' ? slabSpec(sl.method, 'slab', Ts[ref + 1], t, faces[ref + 1].name) : { kind: 'free' };
+    if (ref < n - 1) sE = ch.corners[ref].type === 'in' ? slabSpec(sl.method, 'slab', Ts[ref + 1], t, faces[ref + 1].name, ov) : { kind: 'free' };
     else sE = { kind: ch.endEnd };
-    const yS = slabSpec(sl.method, 'slab', Ts[ref], t, fr.name);
+    const yS = slabSpec(sl.method, 'slab', Ts[ref], t, fr.name, ov);
     const yE = { kind: sl.frontEnd };
     const A = layout1D({ ...base, Lraw: num(fr.L), sizes: expand(sl.cols), sS, sE, align: sl.alignA, manual: sl.manA, names: NAMES_COL });
     const B = layout1D({ ...base, Lraw: num(sl.depth), sizes: expand(sl.rows), sS: yS, sE: yE, align: sl.alignB, manual: sl.manB, names: NAMES_SLAB_Y });
@@ -694,6 +700,9 @@ function commonForm() {
     ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc" style="color:#90caf9"></b> (코너 계산의 핵심값)')}
     ${field('중간 조인트 편심 (좌/하 -, 우/상 +)', numIn('common.shift', c.shift), 'mm')}
     ${hint('양 끝단 파이프는 고정, 중간 조인트 파이프만 이동')}
+    ${field('픽셀 피치 (P)', numIn('common.pitch', c.pitch), 'mm')}
+    ${field('내측 코너 겹침 픽셀 수', numIn('common.ovPx', c.ovPx), 'px')}
+    ${hint('→ 덮는 면이 상대 스크린 앞면 뒤로 <b id="ovcalc" style="color:#90caf9"></b> 겹침 (보통 1~3픽셀)')}
     ${field('코너·여백 허용 오차 ±', numIn('common.tol', c.tol), 'mm')}
   </div>`;
 }
@@ -734,8 +743,9 @@ function cornerFig(cn, A, B) {
   if (cn.type === 'in') {
     // 내측: 벽은 왼쪽(A)과 위쪽(B), 방 안쪽이 오른쪽 아래
     g += `<polyline points="${W},${E} ${W},${W} ${E},${W}" fill="none" stroke="#9e9e9e" stroke-width="4"/>`;
-    const a0 = miter ? W + T - t : covA ? W + T - t : W + T; // A 스크린 시작(y)
-    const b0 = miter ? W + T - t : covB ? W + T - t : W + T; // B 스크린 시작(x)
+    const o = 4; // 겹침(그림용)
+    const a0 = miter ? W + T - t : covA ? W + T - o : W + T; // A 스크린 시작(y)
+    const b0 = miter ? W + T - t : covB ? W + T - o : W + T; // B 스크린 시작(x)
     if (miter) {
       g += `<polygon points="${W + T - t},${W + T - t} ${W + T},${W + T} ${W + T},${E} ${W + T - t},${E}" fill="${colA}"/>`;
       g += `<polygon points="${W + T - t},${W + T - t} ${W + T},${W + T} ${E},${W + T} ${E},${W + T - t}" fill="${colB}"/>`;
@@ -767,7 +777,7 @@ function cornerFig(cn, A, B) {
   else {
     const cov = covA ? A : B, but = covA ? B : A;
     desc = cn.type === 'in'
-      ? `<b>${esc(cov)}</b> 스크린이 코너 안쪽 끝까지 길게 가고, <b>${esc(but)}</b> 스크린은 ${esc(cov)} 스크린 <b>앞면에 붙여</b> 짧게 끝납니다.`
+      ? `<b>${esc(cov)}</b> 스크린이 코너까지 가서 <b>${esc(but)}</b> 스크린 앞면 뒤로 <b>${f(cornerOverlap(state.common))}mm(${num(state.common.ovPx)}픽셀)</b>만 겹치고, ${esc(but)} 스크린은 ${esc(cov)} 스크린 <b>앞면에 붙여</b> 끝납니다.`
       : `<b>${esc(cov)}</b> 스크린이 모서리 밖으로 뻗어 <b>${esc(but)}</b> 스크린 옆면을 가립니다. ${esc(but)} 스크린은 ${esc(cov)} 뒤에 붙습니다.`;
     desc += `<br><span style="color:#90caf9">밝은 파랑 = 끝까지 가는(덮는) 면</span>`;
     const ch = state.chain, bi = baseIndex(ch), bn = ch.faces[bi]?.name;
@@ -1042,7 +1052,7 @@ function renderChain() {
     alerts.push({ lv: 'warn', tx: `${r.name}: 먼저 시공하는 ${r.measure.nbName} 쪽을 덮도록 설정됨 → 코너 마감을 "${r.measure.nbName} 덮음"으로 바꾸는 것을 권장` }); });
   let h = `<div class="card"><h2>평면도 (위에서 본 모습)</h2>${planSVG(R, state)}
     <ul class="alerts" style="margin-top:8px">${alerts.length ? alerts.map(a => `<li class="st-${a.lv}">● ${esc(a.tx)}</li>`).join('') : '<li class="st-ok">● 모든 끝단·코너가 허용 오차 안에 들어옵니다.</li>'}</ul>
-    <div class="note">코너 규칙 — 내측(덮는 면): 상대 스크린 <b>뒷면선(T−t)</b>까지 진행 / 내측(맞대는 면): 상대 <b>앞면선(T)</b>에서 시작 / 외측(덮는 면): 벽 모서리 밖으로 상대 T만큼 / 외측(맞대는 면): 덮는 면 뒷면까지(T−t). 각 수치는 해당 코너 벽면에서 잰 값입니다.</div></div>`;
+    <div class="note">코너 규칙 — 내측(덮는 면): 상대 스크린 <b>앞면선에서 겹침만큼 뒤(T−겹침)</b>까지 진행 / 내측(맞대는 면): 상대 <b>앞면선(T)</b>에서 시작 / 외측(덮는 면): 벽 모서리 밖으로 상대 T만큼 / 외측(맞대는 면): 덮는 면 뒷면까지(T−t). 각 수치는 해당 코너 벽면에서 잰 값입니다.</div></div>`;
   h += all.map(r => faceResult(r, pipe)).join('');
   $('#results').innerHTML = h;
 }
@@ -1134,6 +1144,7 @@ function renderResults() {
   renderPrintHead();
   const T = commonT(state.common), el = $('#Tcalc');
   if (el) el.textContent = `${f(T)} mm`;
+  const oe = $('#ovcalc'); if (oe) oe.textContent = `${f(cornerOverlap(state.common))} mm`;
   try { state.mode === 'chain' ? renderChain() : renderArc(); }
   catch (e) { $('#results').innerHTML = `<div class="card st-err">계산 오류: ${esc(e.message)}</div>`; console.error(e); }
 }
