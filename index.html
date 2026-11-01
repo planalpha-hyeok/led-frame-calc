@@ -103,6 +103,9 @@
   .note { font-size: 0.77rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
   .legend { font-size: 0.74rem; color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 10px; }
   .legend i { display: inline-block; width: 12px; height: 4px; vertical-align: middle; margin-right: 3px; }
+  .insets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .insets .svgbox svg { max-height: 220px; }
+  .insets .note { margin-top: 4px; font-size: 0.72rem; }
   .fab { position: fixed; right: 14px; bottom: 18px; z-index: 30; border: none; border-radius: 26px; padding: 12px 18px; font-size: 0.9rem; font-weight: 700; background: var(--primary); color: #fff; box-shadow: 0 4px 14px var(--shadow); cursor: pointer; }
   .fab .badge { display: inline-block; margin-left: 6px; background: #fff; color: #c62828; border-radius: 10px; padding: 0 7px; font-size: 0.78rem; }
   .toolbar .btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -250,6 +253,8 @@
 
     <h4>업데이트 내역</h4>
     <ul>
+      <li><b>v2.6.2</b>: 외측 코너 끝 파이프가 상대 스크린과 겹치던 문제 수정, 파이프-스크린 간섭 검사 추가</li>
+      <li><b>v2.6.1</b>: 평면도 아래 코너 확대도 추가</li>
       <li><b>v2.6</b>: 밝은/어두운 모드, mm 정수·각도 0.5° 표시, 결과 바로가기 버튼, 입력 편의 개선</li>
       <li><b>v2.5</b>: 곡면을 구간으로 이어 붙이기 (곡면+평면+곡면, 오목+볼록+오목 등)</li>
       <li><b>v2.4</b>: 내측 코너 겹침을 픽셀 단위(피치 × 1~3픽셀)로 계산</li>
@@ -358,7 +363,7 @@ function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.6';
+const APP_VERSION = '2.6.2';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -493,9 +498,15 @@ function layout1D({ Lraw, sizes, sS, sE, align, manual, pipe, shift, tol, names 
   sizes.forEach(w => { x += w; seams.push(x); });
   const pipes = [];
   if (sizes.length) {
-    pipes.push({ desc: names.start, c: x0 + h, fixed: true });
+    // 외측 코너에서 덮는 면은 끝이 모서리 밖으로 나가므로, 끝 파이프가 상대 스크린 자리를 피해 안쪽으로 들어와야 함
+    const outLimit = sp => (sp.kind === 'out-cover' || sp.kind === 'out-miter') ? sp.To - sp.t : null;
+    const limS = outLimit(sS), limE = outLimit(sE);
+    let cS = x0 + h, cE = x1 - h, noteS = '', noteE = '';
+    if (limS != null && cS < -limS + h) { cS = -limS + h; noteS = ` (상대 스크린 피해 ${f(cS - x0 - h)}mm 안쪽)`; }
+    if (limE != null && cE > Lraw + limE - h) { cE = Lraw + limE - h; noteE = ` (상대 스크린 피해 ${f(x1 - h - cE)}mm 안쪽)`; }
+    pipes.push({ desc: names.start + noteS, c: cS, fixed: true });
     for (let i = 0; i < sizes.length - 1; i++) pipes.push({ desc: names.joint(i + 1, i + 2), c: seams[i + 1] + shift });
-    pipes.push({ desc: names.end(sizes.length), c: x1 - h, fixed: true });
+    pipes.push({ desc: names.end(sizes.length) + noteE, c: cE, fixed: true });
   }
   return { Lraw, C, eS, eE, x0, x1, seams, pipes, count: sizes.length,
     stS: endStatus(sS, eS, tol), stE: endStatus(sE, eE, tol), sS, sE };
@@ -999,10 +1010,19 @@ function pipeClashes(R, st) {
       : [{ k: '가로', a: pt(s, A.x0, zc - pipe / 2), b: pt(s, A.x1, zc + pipe / 2) }];
     return rects.map(r => ({ k: r.k, x0: Math.min(r.a[0], r.b[0]), x1: Math.max(r.a[0], r.b[0]), y0: Math.min(r.a[1], r.b[1]), y1: Math.max(r.a[1], r.b[1]) }));
   });
+  // 이웃 면 스크린(캐비넷) 영역
+  const scr = byIdx.map(fr => { const sg = segs[fr.idx], a = pt(sg, fr.A.x0, fr.T), b = pt(sg, fr.A.x1, fr.T - t);
+    return { x0: Math.min(a[0], b[0]), x1: Math.max(a[0], b[0]), y0: Math.min(a[1], b[1]), y1: Math.max(a[1], b[1]) }; });
+  const ov = (a, b) => [Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)];
+  for (let i = 0; i < boxes.length; i++) [i - 1, i + 1].filter(j => j >= 0 && j < boxes.length).forEach(j => boxes[i].forEach(a => {
+    const [ox, oy] = ov(a, scr[j]);
+    if (ox > 0.5 && oy > 0.5) out.push({ lv: 'err', tx: `${byIdx[i].name} ${pl(a.k)}가 ${byIdx[j].name} 스크린(캐비넷) 자리와 겹침 (${f(ox)}×${f(oy)}mm)` });
+  }));
   for (let i = 0; i < boxes.length - 1; i++) {
     boxes[i].forEach(a => boxes[i + 1].forEach(b => {
       const ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), oy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
-      if (ox > 0.5 && oy > 0.5) out.push({ lv: 'warn', tx: `코너 ${i + 1}: ${byIdx[i].name} ${pl(a.k)}와 ${byIdx[i + 1].name} ${pl(b.k)}가 겹침 (${f(ox)}×${f(oy)}mm) → 1본 공용 또는 한쪽 생략/이동` });
+      if (ox > pipe - 1 && oy > pipe - 1 && a.k !== '가로' && b.k !== '가로') out.push({ lv: 'info', tx: `코너 ${i + 1}: ${byIdx[i].name} ${pl(a.k)}와 ${byIdx[i + 1].name} ${pl(b.k)}는 같은 자리 → 1본으로 같이 사용` });
+      else if (ox > 0.5 && oy > 0.5) out.push({ lv: 'warn', tx: `코너 ${i + 1}: ${byIdx[i].name} ${pl(a.k)}와 ${byIdx[i + 1].name} ${pl(b.k)}가 겹침 (${f(ox)}×${f(oy)}mm) → 1본 공용 또는 한쪽 생략/이동` });
     }));
   }
   return out;
@@ -1049,7 +1069,22 @@ function planSVG(R, st) {
     if (anc === 'end') padL = Math.max(padL, minX - (q[0] - w) + pad);
     g += `<text x="${q[0]}" y="${q[1] + fs * 0.35}" font-size="${fs}" fill="#ddd" text-anchor="${anc}">${esc(faces[i].name)} ${f(s.L)}</text>`;
   });
+  // 코너 확대도: 전체 평면도에서는 스크린 두께가 몇 픽셀이라 맞물림이 안 보이므로 코너마다 실제 비율로 확대
+  const byIdx = [...R.faces].sort((a, c) => a.idx - c.idx);
+  let insets = '';
+  for (let i = 0; i < n - 1; i++) {
+    const s1 = segs[i], s2 = segs[i + 1], cn = ch.corners[i];
+    const Tm = Math.max(byIdx[i].T, byIdx[i + 1].T), S = Math.max(3.2 * Tm, 360);
+    const k = cn.type === 'in' ? 0.55 : -0.15;
+    const c = [s2.P0[0] + (s1.n[0] + s2.n[0]) * Tm * k, s2.P0[1] + (s1.n[1] + s2.n[1]) * Tm * k];
+    const fz = S / 16;
+    const capA = byIdx[i].A.stE, capB = byIdx[i + 1].A.stS;
+    insets += `<div class="inset"><div class="svgbox"><svg viewBox="${c[0] - S / 2} ${-c[1] - S / 2} ${S} ${S}">${g}
+      <text x="${c[0] - S / 2 + fz * 0.5}" y="${-c[1] - S / 2 + fz * 1.3}" font-size="${fz}" fill="#90caf9">코너 ${i + 1} 확대</text></svg></div>
+      <div class="note"><b>${esc(faces[i].name)}</b>: <span class="st-${capA.lv}">${esc(capA.tx)}</span><br><b>${esc(faces[i + 1].name)}</b>: <span class="st-${capB.lv}">${esc(capB.tx)}</span></div></div>`;
+  }
   return `<div class="svgbox"><svg viewBox="${minX - padL} ${minY - pad - fs} ${maxX - minX + padL + padR} ${maxY - minY + 2 * pad + fs}">${g}</svg></div>
+    ${insets ? `<div class="insets">${insets}</div>` : ''}
     <div class="legend"><span><i style="background:#9e9e9e"></i>벽 구조면</span><span><i style="background:#4fc3f7"></i>스크린(캐비넷)</span><span><i style="background:#ff9800"></i>파이프</span>
     ${R.slabs.length ? '<span><i style="background:#fff176"></i>천장</span><span><i style="background:#a5d6a7"></i>바닥 (점선=투영)</span>' : ''}</div>`;
 }
