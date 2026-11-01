@@ -106,6 +106,7 @@
   .insets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .insets .svgbox svg { max-height: 220px; }
   .insets .note { margin-top: 4px; font-size: 0.72rem; }
+  td.tp { white-space: nowrap; font-size: 0.78rem; }
   .fab { position: fixed; right: 14px; bottom: 18px; z-index: 30; border: none; border-radius: 26px; padding: 12px 18px; font-size: 0.9rem; font-weight: 700; background: var(--primary); color: #fff; box-shadow: 0 4px 14px var(--shadow); cursor: pointer; }
   .fab .badge { display: inline-block; margin-left: 6px; background: #fff; color: #c62828; border-radius: 10px; padding: 0 7px; font-size: 0.78rem; }
   .toolbar .btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -366,7 +367,7 @@ function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.7.1';
+const APP_VERSION = '2.7.2';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -1127,7 +1128,7 @@ function pipeTable(r) {
     const farRef = m.fromEnd ? r.refs.aS : r.refs.aE;
     const tp = tapePlan(list.map(p => p.dw - m.refOff), L.Lraw - m.refOff);
     return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>중심<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>중심<br><small>${esc(farRef)}에서</small></th>${tp.need ? '<th>📏 줄자</th>' : ''}</tr></thead><tbody>
-      ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff)}</td><td>${f(p.dw)}</td><td>${f(L.Lraw - p.dw)}</td>${tp.need ? `<td>${tapeCell(tp.plan[i])}</td>` : ''}</tr>`).join('')}
+      ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff)}</td><td>${f(p.dw)}</td><td>${f(L.Lraw - p.dw)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}</tr>`).join('')}
     </tbody></table></div>
     <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 주황색 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f1(h)}mm.</div>${tapeNote(tp, m.nbName + ' 스크린 앞면', farRef)}`;
   }
@@ -1135,7 +1136,7 @@ function pipeTable(r) {
   const h = num(state.common.pipe) / 2;
   const tp = tapePlan(L.pipes.map(p => p.c), L.Lraw);
   return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(ref[0])}에서</small></th><th>중심<br><small>${esc(ref[1])}에서</small></th>${tp.need ? '<th>📏 줄자</th>' : ''}<th>설치 구간</th></tr></thead><tbody>
-    ${L.pipes.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(L.Lraw - p.c)}</td>${tp.need ? `<td>${tapeCell(tp.plan[i])}</td>` : ''}<td>${f(p.c - h)} ~ ${f(p.c + h)}</td></tr>`).join('')}
+    ${L.pipes.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(L.Lraw - p.c)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}<td>${f(p.c - h)} ~ ${f(p.c + h)}</td></tr>`).join('')}
   </tbody></table></div>${tapeNote(tp, ref[0], ref[1])}`;
 }
 
@@ -1239,7 +1240,7 @@ function renderArc() {
     ${arcSVG(r)}
     <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
     <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th>${tpA.need ? '<th>📏 X 줄자</th>' : ''}<th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
-      ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td>${tpA.need ? `<td>${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
+      ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td>${tpA.need ? `<td class="tp">${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
     </tbody></table></div>${tapeNote(tpA, '1번 파이프', '마지막 파이프')}
     <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
     ${flexSegs.length ? `<h3>가로 벤딩 파이프 규격 (구간별)</h3>
