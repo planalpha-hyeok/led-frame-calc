@@ -1,5 +1,5 @@
 // 오프라인 지원: 화면(HTML)은 인터넷이 되면 항상 최신으로, 안 되면 저장본으로.
-const CACHE = 'led-frame-calc-v2.8.1';
+const CACHE = 'led-frame-calc-v2.9';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

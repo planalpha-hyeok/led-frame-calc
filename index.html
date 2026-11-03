@@ -161,7 +161,7 @@
   table { width: 100%; border-collapse: collapse; font-size: .84rem; text-align: center; }
   th, td { padding: 9px 8px; white-space: nowrap; border-bottom: 1px solid var(--sep); }
   tbody tr:last-child td { border-bottom: none; }
-  th { background: var(--th); font-weight: 600; font-size: .76rem; color: var(--text2); line-height: 1.35; white-space: normal; word-break: keep-all; min-width: 3.2em; }
+  th { background: var(--th); font-weight: 600; font-size: .76rem; color: var(--text2); line-height: 1.35; white-space: normal; word-break: keep-all; min-width: 4.8em; }
   th small { font-weight: 400; color: var(--muted); }
   tbody tr { background: var(--card-bg); }
   td small { color: var(--muted); }
@@ -169,6 +169,7 @@
   th:first-child { background: var(--th); }
   td:first-child { background: inherit; color: var(--muted); font-weight: 600; }
   td.tp { font-size: .8rem; }
+  td.ref { font-size: .78rem; color: var(--muted); }
 
   /* 떠 있는 버튼 · 알림 */
   .fab { position: fixed; right: 16px; bottom: 20px; z-index: 30; border: none; border-radius: 26px; padding: 13px 20px; font-size: .9rem; font-weight: 700; background: var(--primary); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; display: inline-flex; align-items: center; }
@@ -231,7 +232,7 @@
     <p>코너 계산은 전부 이 값으로 합니다. "공통 자재·깊이"에서 자동 계산됩니다.</p>
     <ul>
       <li><b>매립</b>: T = 매립 깊이 D + 깊이 조정값 (예: 120 + (−2) = 118)</li>
-      <li><b>벽부착</b>: T = 브라켓 이격 + 파이프 + 스크린 두께 (예: 29 + 50 + 61 = 140)</li>
+      <li><b>벽부착</b>: T = 브라켓 띄움 + 파이프 + 스크린 두께 (예: 29 + 50 + 61 = 140)</li>
     </ul>
     <p>특정 면만 깊이가 다르면 그 면의 "깊이 T 따로" 칸에 직접 넣으세요.</p>
 
@@ -242,14 +243,14 @@
       <li><b>공통 자재·깊이</b>에 파이프 규격, 스크린 두께, 깊이를 넣습니다.</li>
       <li>각 면에 <b>벽 길이·높이(실측)</b>와 <b>캐비넷 구성</b>을 넣습니다.</li>
       <li>면 사이의 <b>코너 카드</b>에서 코너 종류와 마감 방식을 고릅니다.</li>
-      <li>아래 결과에서 <b>경고(주황·빨강)</b>가 없는지 확인하고, 표의 숫자대로 먹매김합니다.</li>
+      <li>아래 결과에서 <b>경고(주황·빨강)</b>가 없는지 확인하고, 표의 숫자대로 바닥에 표시합니다.</li>
     </ol>
     <p>입력은 바로바로 계산되고, 이 기기 브라우저에 자동 저장됩니다. 처음부터 하려면 맨 아래 "전체 초기화".</p>
 
     <h4>4. 면 입력 규칙</h4>
     <ul>
       <li>면은 <b>관람자가 화면을 바라볼 때 왼쪽 → 오른쪽</b> 순서입니다. (ㄷ이면 좌측벽 → 정면 → 우측벽)</li>
-      <li><b>벽 길이</b>는 코너에서 코너까지 <b>벽 구조면</b>(마감 전 벽)끼리 잰 길이입니다.</li>
+      <li><b>벽 길이</b>는 코너에서 코너까지 <b>마감 전 벽면</b>끼리 잰 길이입니다.</li>
       <li>세로 단 구성은 원래처럼 <b>상단 → 하단</b> 순서로 넣습니다.</li>
       <li>"+ 오른쪽에 면 추가"로 면을 늘리면 사이에 코너가 하나 생깁니다.</li>
     </ul>
@@ -270,9 +271,9 @@
 
     <h4>7. 끝단 조건과 배치</h4>
     <ul>
-      <li><b>개구부 벽(매립)</b>: 양쪽에 벽이 있는 매립형. 남는 여백을 양쪽에 똑같이 나눕니다.</li>
-      <li><b>자유단</b>: 벽에 붙지 않고 끝나는 쪽. 남는 길이가 이쪽으로 갑니다.</li>
-      <li><b>배치 = 자동</b>이면 코너 쪽을 먼저 딱 맞추고 나머지를 자유단으로 보냅니다. 바닥에서 몇 mm 띄울지 정해져 있으면 "하단 여백 직접 입력"을 쓰세요.</li>
+      <li><b>마감 면(매립)</b>: 양쪽에 벽이 있는 매립형. 남는 여백을 양쪽에 똑같이 나눕니다.</li>
+      <li><b>벽 없음</b>: 벽에 붙지 않고 끝나는 쪽. 남는 길이가 이쪽으로 갑니다.</li>
+      <li><b>배치 = 자동</b>이면 코너 쪽을 먼저 딱 맞추고 나머지를 벽 없는 쪽으로 보냅니다. 바닥에서 몇 mm 띄울지 정해져 있으면 "하단 여백 직접 입력"을 쓰세요.</li>
     </ul>
 
     <h4>8. 천장 · 바닥 LED</h4>
@@ -286,7 +287,7 @@
     <ul>
       <li><b>평면도</b>: 위에서 내려다본 그림. 회색=벽, 파랑=스크린, 주황=파이프.</li>
       <li><b>상태 칸</b>: 초록=정상, 주황=틈·돌출(확인 필요), 빨강=간섭(설치 불가). 허용 오차는 공통 설정에서 바꿀 수 있습니다.</li>
-      <li><b>줄자 기준표</b>: 파이프 <b>중심</b> 위치를 양쪽 기준(예: 좌측벽 코너에서 / 우측벽 코너에서)으로 보여줍니다. 편한 쪽에서 재세요.</li>
+      <li><b>줄자 기준표</b>: 파란 숫자는 줄자를 댄 기준에서 <b>가까운 파이프 면</b>까지 거리입니다(중심은 참고 칸). 양쪽 기준(예: 좌측벽 코너에서 / 우측벽 코너에서)으로 보여줍니다. 편한 쪽에서 재세요.</li>
       <li><b>설치 구간</b>: 파이프 한쪽 면 ~ 반대쪽 면 위치입니다.</li>
       <li><b>줄자 칸</b>: 줄자는 5.5m면 <b>5m씩 끊어</b> 쓰는 것으로 계산합니다(7.5m → 7m). 그보다 먼 파이프가 있으면 이 칸이 생깁니다. ◀는 시작 쪽에서, ▶는 끝 쪽에서, <b>[5000]+635</b>는 5000 지점에 먹을 놓고 거기서 635를 재라는 뜻입니다.</li>
       <li><b>파이프 뒤 여유</b>가 빨강이면 깊이가 모자라 파이프가 벽에 닿습니다.</li>
@@ -294,14 +295,14 @@
 
     <h4>10. 곡면 탭</h4>
     <ul>
-      <li><b>구간을 이어 붙입니다</b>: 왼쪽 → 오른쪽으로 <b>곡면·평면</b> 구간을 추가하세요. 예) 곡면+평면+곡면, S자(오목+볼록+오목). 구간끼리는 매끄럽게(접선으로) 이어집니다.</li>
+      <li><b>구간을 이어 붙입니다</b>: 왼쪽 → 오른쪽으로 <b>곡면·평면</b> 구간을 추가하세요. 예) 곡면+평면+곡면, S자(오목+볼록+오목). 구간끼리는 꺾임 없이 매끄럽게 이어집니다.</li>
       <li><b>오목</b>: 관람자를 감싸는 곡면 / <b>볼록</b>: 바깥으로 튀어나온 곡면. 구간마다 반경 R과 캐비넷 구성을 따로 넣습니다.</li>
       <li><b>R</b>: 원 중심에서 스크린 앞면까지 반경.</li>
       <li><b>플렉시블</b>은 매끈한 곡선(가로 파이프 벤딩), <b>평판 꺾음</b>은 일반 캐비넷을 조금씩 꺾어 붙인 다각형입니다.</li>
-      <li><b>먹매김 방법</b>: 바닥에 1번과 마지막 파이프 중심을 찍고 실을 띄웁니다. 실을 따라 X만큼 간 지점에서 직각으로 Y만큼 떨어진 곳이 파이프 중심입니다.</li>
+      <li><b>표시 방법</b>: 바닥에 1번 파이프 앞-왼쪽 모서리와 마지막 파이프 앞-오른쪽 모서리를 찍고 실을 띄웁니다. 실을 따라 X만큼 간 지점에서 직각으로 Y만큼 떨어진 곳이 그 파이프의 모서리입니다. 앞 왼쪽·오른쪽 두 모서리를 이으면 파이프 앞면(스크린쪽) 선이 됩니다.</li>
       <li><b>방향 각도</b>: 그 파이프 자리에서 스크린 면이 실(기준선)과 이루는 각도입니다. +는 오른쪽으로 갈수록 벽쪽으로 올라가는 방향, −는 관람측으로 내려가는 방향입니다. 꺾임 칸은 캐비넷끼리 꺾이는 각도라서 플렉시블은 "-"로 나옵니다.</li>
       <li><b>벤딩 파이프 규격</b>: 곡면 구간마다 반경과 절단 길이가 나옵니다. 오목↔볼록이 바뀌는 곳은 벤딩 방향이 반대입니다. 여유 절단분은 따로 더하세요.</li>
-      <li>먹매김 표의 <b>Y는 +면 벽쪽, −면 관람측</b>입니다. S자처럼 기준선을 가로지르는 경우 부호를 꼭 확인하세요.</li>
+      <li>표시 표의 <b>Y는 +면 벽쪽, −면 관람측</b>입니다. S자처럼 기준선을 가로지르는 경우 부호를 꼭 확인하세요.</li>
     </ul>
 
     <h4>11. 시공 순서 (ㄱ·ㄷ)</h4>
@@ -328,7 +329,8 @@
 
     <h4>업데이트 내역</h4>
     <ul>
-      <li><b>v2.8.1</b>: 곡면 먹매김 표에 파이프 방향 각도(기준선 대비) 추가</li>
+      <li><b>v2.9</b>: 용어 정리(개구부→마감 면, 자유단→벽 없음, 조인트→이음부, 먹매김→표시 등), 표의 강조값을 파이프 중심 → 가까운 파이프 면으로 변경, 곡면은 파이프 앞쪽 두 모서리 좌표로 표시(기준선도 모서리 기준)</li>
+      <li><b>v2.8.1</b>: 곡면 표시 표에 파이프 방향 각도(기준선 대비) 추가</li>
       <li><b>v2.8</b>: 화면 디자인 정리 (iOS 스타일 카드·세그먼트 탭·선 아이콘, 결과 요약 목록형, 표 가로 스크롤 · No. 열 고정, 줄자 기준 숫자 파랑)</li>
       <li><b>v2.7.1</b>: 줄자는 5m 단위로 끊어 재는 것으로 변경 (5.5m → 5m)</li>
       <li><b>v2.7</b>: 줄자 길이(기본 5.5m) 반영 — 닿지 않으면 반대쪽 끝·중간 기준점에서 재도록 안내</li>
@@ -455,7 +457,7 @@ function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.8.1';
+const APP_VERSION = '2.9';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -539,7 +541,7 @@ function endStatus(s, e, tol) {
   const i = IDEAL[s.kind](s), d = e - i;
   const who = s.label ? `${s.label}` : '상대면';
   switch (s.kind) {
-    case 'opening': return e < -tol ? { lv: 'err', tx: `벽 간섭 ${f(-e)}mm (캐비넷이 개구부보다 큼)` } : { lv: 'ok', tx: `여백 ${f(e)}mm` };
+    case 'opening': return e < -tol ? { lv: 'err', tx: `벽 간섭 ${f(-e)}mm (캐비넷이 마감 면 사이보다 큼)` } : { lv: 'ok', tx: `여백 ${f(e)}mm` };
     case 'free': return { lv: 'ok', tx: `끝단 여유 ${f(e)}mm` };
     case 'in-cover': {
       const ov = s.ov ?? s.t;
@@ -547,16 +549,16 @@ function endStatus(s, e, tol) {
       if (d > ov + tol) return { lv: 'warn', tx: `코너 틈 ${f(d - ov)}mm (${who} 스크린 옆이 벌어짐)` };
       if (d > tol) return { lv: 'warn', tx: `겹침 부족: ${who} 앞면 뒤로 ${f1(ov - d)}mm만 겹침 (목표 ${f1(ov)}mm)` };
       if (d < -tol) return { lv: 'info', tx: `${who} 스크린 뒤로 ${f1(ov - d)}mm 겹침 (목표 ${f1(ov)}mm보다 ${f(-d)}mm 더 가려짐)` };
-      return { lv: 'ok', tx: `코너 정합 (${who} 앞면 뒤로 ${f1(ov)}mm 겹침)` };
+      return { lv: 'ok', tx: `코너 맞음 (${who} 앞면 뒤로 ${f1(ov)}mm 겹침)` };
     }
     case 'out-cover':
       if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm (${who} 측면 노출)` };
       if (d < -tol) return { lv: 'warn', tx: `코너 돌출 ${f(-d)}mm` };
-      return { lv: 'ok', tx: `코너 정합 (${who} 앞면선까지)` };
+      return { lv: 'ok', tx: `코너 맞음 (${who} 앞면선까지)` };
     default:
       if (d > tol) return { lv: 'warn', tx: `코너 틈 ${f(d)}mm` };
       if (d < -tol) return { lv: 'err', tx: `코너 간섭 ${f(-d)}mm (캐비넷 겹침)` };
-      return { lv: 'ok', tx: s.kind.endsWith('miter') ? '45° 모서리 정합' : `코너 정합 (${who} 앞면에 맞댐)` };
+      return { lv: 'ok', tx: s.kind.endsWith('miter') ? '45° 모서리 맞음' : `코너 맞음 (${who} 앞면에 맞댐)` };
   }
 }
 
@@ -604,9 +606,9 @@ function layout1D({ Lraw, sizes, sS, sE, align, manual, pipe, shift, tol, names 
     stS: endStatus(sS, eS, tol), stE: endStatus(sE, eE, tol), sS, sE };
 }
 
-const NAMES_COL = { start: '1열 시작 끝단', joint: (a, b) => `${a}-${b}열 조인트`, end: n => `${n}열 끝 끝단` };
-const NAMES_ROW = { start: '최하단 끝단', joint: (a, b) => `하${a}-${b}단 조인트`, end: () => '최상단 끝단' };
-const NAMES_SLAB_Y = { start: '벽쪽 끝단', joint: (a, b) => `벽쪽 ${a}-${b}줄 조인트`, end: () => '바깥 끝단' };
+const NAMES_COL = { start: '1열 시작 끝단', joint: (a, b) => `${a}-${b}열 이음부`, end: n => `${n}열 끝 끝단` };
+const NAMES_ROW = { start: '최하단 끝단', joint: (a, b) => `하${a}-${b}단 이음부`, end: () => '최상단 끝단' };
+const NAMES_SLAB_Y = { start: '벽쪽 끝단', joint: (a, b) => `벽쪽 ${a}-${b}줄 이음부`, end: () => '바깥 끝단' };
 
 function cornerSpec(corner, role, To, t, label, ov) {
   const k = corner.method === 'miter' ? `${corner.type}-miter` : `${corner.type}-${corner.method === role ? 'cover' : 'butt'}`;
@@ -638,7 +640,7 @@ function computeChain(st) {
     const sT = ceilOn ? slabSpec(ch.ceil.method, 'wall', Tc, t, '천장', ov) : { kind: ch.topEnd };
     const A = layout1D({ ...base, Lraw: num(fc.L), sizes: expand(fc.cols), sS, sE, align: fc.alignA, manual: fc.manA, names: NAMES_COL });
     const B = layout1D({ ...base, Lraw: num(fc.H), sizes: expand(fc.rows).reverse(), sS: sB, sE: sT, align: fc.alignB, manual: fc.manB, names: NAMES_ROW });
-    const endRef = (k, isStart) => k === 'opening' ? (isStart ? '시작쪽 개구부 벽' : '끝쪽 개구부 벽') : (isStart ? '시작쪽 바깥 끝' : '끝쪽 바깥 끝');
+    const endRef = (k, isStart) => k === 'opening' ? (isStart ? '시작쪽 마감 면' : '끝쪽 마감 면') : (isStart ? '시작쪽 바깥 끝' : '끝쪽 바깥 끝');
     out.faces.push({
       kind: 'wall', idx: i, title: `면 ${i + 1}: ${fc.name}`, name: fc.name, T: Ts[i], A, B,
       main: fc.dir === 'v' ? 'A' : 'B',
@@ -647,8 +649,8 @@ function computeChain(st) {
       refs: {
         aS: i === 0 ? endRef(ch.startEnd, true) : `${prev.name} 코너 벽면`,
         aE: i === n - 1 ? endRef(ch.endEnd, false) : `${next.name} 코너 벽면`,
-        bS: floorOn ? '바닥 구조면' : (ch.bottomEnd === 'opening' ? '개구부 하단' : '바닥 기준'),
-        bE: ceilOn ? '천장 구조면' : (ch.topEnd === 'opening' ? '개구부 상단' : '상단 기준'),
+        bS: floorOn ? '바닥면' : (ch.bottomEnd === 'opening' ? '마감 면 하단' : '바닥 기준'),
+        bE: ceilOn ? '천장면' : (ch.topEnd === 'opening' ? '마감 면 상단' : '상단 기준'),
       },
       depth: depthInfo(Ts[i], t, pipe),
     });
@@ -676,7 +678,7 @@ function computeChain(st) {
       refs: {
         aS: ref > 0 ? `${faces[ref - 1].name} 벽면` : '시작 끝 기준점',
         aE: ref < n - 1 ? `${faces[ref + 1].name} 벽면` : '끝 끝 기준점',
-        bS: `${fr.name} 벽면`, bE: sl.frontEnd === 'opening' ? '바깥 개구부 벽' : '바깥 끝',
+        bS: `${fr.name} 벽면`, bE: sl.frontEnd === 'opening' ? '바깥 마감 면' : '바깥 끝',
       },
       depth: depthInfo(Tsl, t, pipe),
     });
@@ -786,15 +788,19 @@ function computeArc(st) {
     const hb = A.hout + turn / 2;
     const P = add(add(A.P1, nv(hb), d / Math.cos(turn / 2)), dv(hb), shift);
     const border = A.si !== B.si;
-    pipes.push({ desc: `${A.no}-${B.no}열 조인트${border ? ` (구간 ${A.si + 1}→${B.si + 1})` : ''}`, P, hb, s: A.s1 + shift, turn, si: border ? `${A.si + 1}→${B.si + 1}` : A.si, border });
+    pipes.push({ desc: `${A.no}-${B.no}열 이음부${border ? ` (구간 ${A.si + 1}→${B.si + 1})` : ''}`, P, hb, s: A.s1 + shift, turn, si: border ? `${A.si + 1}→${B.si + 1}` : A.si, border });
   }
   pipes.push({ desc: `${pl.no}열 끝 끝단`, P: add(add(pl.P1, dv(pl.hout), -pipe / 2), nv(pl.hout), d), hb: pl.hout, s: pl.s1 - pipe / 2, turn: 0, si: pl.si });
 
   // 기준선: 1번 ~ 마지막 파이프 중심 (거의 닫힌 모양이면 시작 방향)
-  const A0 = pipes[0].P, B0 = pipes[pipes.length - 1].P;
+  // 파이프 앞면(스크린쪽) 두 모서리: 왼쪽 = 시작쪽, 오른쪽 = 끝쪽
+  pipes.forEach(p => { const fc = add(p.P, nv(p.hb), -pipe / 2); p.FL = add(fc, dv(p.hb), -pipe / 2); p.FR = add(fc, dv(p.hb), pipe / 2); });
+  // 기준선: 1번 파이프 앞-왼쪽 모서리 ~ 마지막 파이프 앞-오른쪽 모서리 (중심은 현장에서 찍기 어려움)
+  const A0 = pipes[0].FL, B0 = pipes[pipes.length - 1].FR;
   const chordP = Math.hypot(B0[0] - A0[0], B0[1] - A0[1]);
   const u = chordP > 1 ? [(B0[0] - A0[0]) / chordP, (B0[1] - A0[1]) / chordP] : [1, 0], v = [-u[1], u[0]];
-  pipes.forEach((p, i) => { p.index = i + 1; p.x = dot(sub(p.P, A0), u); p.y = dot(sub(p.P, A0), v); });
+  const loc = q => [dot(sub(q, A0), u), dot(sub(q, A0), v)];
+  pipes.forEach((p, i) => { p.index = i + 1; [p.x, p.y] = loc(p.P); p.fl = loc(p.FL); p.fr = loc(p.FR); });
   const fy = front.map(q => dot(sub(q, A0), v));
   const depthRange = Math.max(...fy) - Math.min(...fy);
 
@@ -816,7 +822,7 @@ function computeArc(st) {
 
   const Bl = layout1D({ Lraw: num(a.H), sizes: expand(a.rows).reverse(), sS: { kind: a.bottomEnd }, sE: { kind: a.topEnd },
     align: a.alignB, manual: a.manB, pipe, shift, tol, names: NAMES_ROW });
-  return { segs, segInfo, front, pipes, chordP, u, v, A0, Bl, warns, pipe, t, d, totalW: s, depthRange, turnTotal: h };
+  return { segs, segInfo, front, pipes, chordP, u, v, A0, B0, Bl, warns, pipe, t, d, totalW: s, depthRange, turnTotal: h };
 }
 
 /* =========================================================
@@ -836,7 +842,7 @@ function listEd(path, list, sizeLabel, cntLabel) {
       <button class="btn del" data-act="delItem" data-path="${path}" data-idx="${i}" aria-label="삭제" title="삭제">${icon('x')}</button>
     </div>`).join('') + `<button class="btn link" data-act="addItem" data-path="${path}">${icon('plus')}규격 추가</button>`;
 }
-const END_OPTS = [['opening', '개구부 벽 (매립, 여백 균등)'], ['free', '자유단 (벽에 안 붙음)']];
+const END_OPTS = [['opening', '마감 면 (매립, 여백 균등)'], ['free', '벽 없음 (열린 끝)']];
 const alignOpts = (s, e) => [['auto', '자동 (코너 우선)'], ['center', '중앙'], ['start', `${s} 붙임`], ['end', `${e} 붙임`], ['manual', `${s} 여백 직접 입력`]];
 
 function commonForm() {
@@ -844,13 +850,13 @@ function commonForm() {
   return `<div class="card"><h2>공통 자재 · 깊이</h2>
     ${field('각파이프 규격', sel('common.pipe', c.pipe, [[30, '30각'], [40, '40각'], [50, '50각 (50×50)'], [60, '60각'], [75, '75각'], [100, '100각']], true))}
     ${field('모듈 포함 스크린 두께 t', numIn('common.t', c.t), 'mm')}
-    ${field('깊이 기준', sel('common.depthMode', c.depthMode, [['recess', '매립 (개구부 깊이 D)'], ['surface', '벽부착 (브라켓 이격)']]))}
+    ${field('깊이 기준', sel('common.depthMode', c.depthMode, [['recess', '매립 (마감 면 깊이 D)'], ['surface', '벽부착 (브라켓 띄움)']]))}
     ${c.depthMode === 'recess'
       ? field('매립 마감 유효 깊이 D', numIn('common.D', c.D), 'mm') + field('스크린 깊이 조정', numIn('common.adj', c.adj), 'mm') + hint('-2: 2mm 안으로 매립, +2: 2mm 돌출, 0: 플랫')
-      : field('벽 ~ 파이프 뒷면 이격', numIn('common.standoff', c.standoff), 'mm') + hint('브라켓/앵커 등 파이프 뒤 공간')}
-    ${hint('→ 벽(구조면) ~ 스크린 앞면 거리 <b id="Tcalc"></b> (코너 계산의 핵심값)')}
-    ${field('중간 조인트 편심 (좌/하 -, 우/상 +)', numIn('common.shift', c.shift), 'mm')}
-    ${hint('양 끝단 파이프는 고정, 중간 조인트 파이프만 이동')}
+      : field('벽 ~ 파이프 뒷면 띄움', numIn('common.standoff', c.standoff), 'mm') + hint('브라켓/앵커 등 파이프 뒤 공간')}
+    ${hint('→ 벽(마감 전) ~ 스크린 앞면 거리 <b id="Tcalc"></b> (코너 계산의 핵심값)')}
+    ${field('중간 이음부 편심 (좌/하 -, 우/상 +)', numIn('common.shift', c.shift), 'mm')}
+    ${hint('양 끝단 파이프는 고정, 중간 이음부 파이프만 이동')}
     ${field('픽셀 피치 (P)', numIn('common.pitch', c.pitch), 'mm')}
     ${field('내측 코너 겹침 픽셀 수', numIn('common.ovPx', c.ovPx), 'px')}
     ${hint('→ 덮는 면이 상대 스크린 앞면 뒤로 <b id="ovcalc"></b> 겹침 (보통 1~3픽셀)')}
@@ -865,9 +871,9 @@ function faceForm(fc, i, n) {
   return `<div class="card">
     <div class="face-head"><span class="no">면 ${i + 1}</span>${txtIn(p + '.name', fc.name)}
       ${n > 1 ? `<button class="btn sm danger" data-act="delFace" data-idx="${i}">면 삭제</button>` : ''}</div>
-    ${field('벽 길이 (구조면 기준 실측)', numIn(p + '.L', fc.L), 'mm')}
-    ${field('높이 (바닥~천장 또는 개구부)', numIn(p + '.H', fc.H), 'mm')}
-    ${field('주 파이프 방향', sel(p + '.dir', fc.dir, [['v', '세로 파이프 (열 조인트)'], ['h', '가로 파이프 (단 조인트)']]))}
+    ${field('벽 길이 (마감 전 벽면 기준 실측)', numIn(p + '.L', fc.L), 'mm')}
+    ${field('높이 (바닥~천장 또는 마감 면)', numIn(p + '.H', fc.H), 'mm')}
+    ${field('주 파이프 방향', sel(p + '.dir', fc.dir, [['v', '세로 파이프 (열 이음부)'], ['h', '가로 파이프 (단 이음부)']]))}
     ${field('가로 배치', sel(p + '.alignA', fc.alignA, alignOpts('시작쪽', '끝쪽')))}
     ${fc.alignA === 'manual' ? field('시작쪽 여백', numIn(p + '.manA', fc.manA), 'mm') : ''}
     ${field('세로 배치', sel(p + '.alignB', fc.alignB, alignOpts('하단', '상단')))}
@@ -967,8 +973,8 @@ function chainForm() {
     ${Object.entries(PRESETS).map(([k, p]) => `<button class="btn" data-act="preset" data-key="${k}">${p.label}</button>`).join('')}
     </div><div class="note">프리셋을 누르면 아래 면/코너 구성이 바뀝니다. 수치를 현장 실측값으로 고쳐 쓰세요.</div></div>`;
   h += `<div class="card"><h2>끝단 조건</h2>
-    ${field(`체인 시작 끝 (${esc(ch.faces[0]?.name)} 시작쪽)`, sel('chain.startEnd', ch.startEnd, END_OPTS))}
-    ${field(`체인 마지막 끝 (${esc(ch.faces[n - 1]?.name)} 끝쪽)`, sel('chain.endEnd', ch.endEnd, END_OPTS))}
+    ${field(`첫 면 왼쪽 끝 (${esc(ch.faces[0]?.name)})`, sel('chain.startEnd', ch.startEnd, END_OPTS))}
+    ${field(`마지막 면 오른쪽 끝 (${esc(ch.faces[n - 1]?.name)})`, sel('chain.endEnd', ch.endEnd, END_OPTS))}
     ${n > 1 ? field('먼저 시공할 기준 면', sel('chain.base', ch.base ?? 'auto', [['auto', `자동 (${esc(ch.faces[baseIndex(ch)]?.name)})`], ...ch.faces.map((fc, i) => [i, `면 ${i + 1}: ${esc(fc.name)}`])])) + hint('기준 면을 먼저 설치하고, 옆 면은 설치된 스크린 앞면에서부터 잽니다') : ''}
     ${ch.floor.on ? '' : field('벽 하단', sel('chain.bottomEnd', ch.bottomEnd, END_OPTS))}
     ${ch.ceil.on ? '' : field('벽 상단', sel('chain.topEnd', ch.topEnd, END_OPTS))}
@@ -986,11 +992,11 @@ function arcForm() {
   const a = state.arc, p = 'arc', segs = arcSegs(a);
   let h = `<div class="card"><h2>곡면 형태 프리셋</h2><div class="presets">
     ${Object.entries(ARC_PRESETS).map(([k, x]) => `<button class="btn" data-act="arcPreset" data-key="${k}">${x.label}</button>`).join('')}
-    </div><div class="note">왼쪽 → 오른쪽 순서로 구간을 이어 붙입니다. 구간끼리는 <b>매끄럽게(접선으로)</b> 이어집니다.</div></div>`;
+    </div><div class="note">왼쪽 → 오른쪽 순서로 구간을 이어 붙입니다. 구간끼리는 <b>꺾임 없이 매끄럽게</b> 이어집니다.</div></div>`;
   h += `<div class="card"><h2>곡면 공통</h2>
-    ${field('주 파이프 방향', sel(p + '.dir', a.dir, [['h', '가로 벤딩 파이프 (단 조인트)'], ['v', '세로 직관 파이프 (열 조인트)']]))}
+    ${field('주 파이프 방향', sel(p + '.dir', a.dir, [['h', '가로 벤딩 파이프 (단 이음부)'], ['v', '세로 직관 파이프 (열 이음부)']]))}
     ${field('모듈 최소 곡률반경 (선택)', numIn(p + '.minR', a.minR, '스펙'), 'mm')}
-    ${field('설치 높이 (바닥~천장/개구부)', numIn(p + '.H', a.H), 'mm')}
+    ${field('설치 높이 (바닥~천장/마감 면)', numIn(p + '.H', a.H), 'mm')}
     ${field('하단', sel(p + '.bottomEnd', a.bottomEnd, END_OPTS))}
     ${field('상단', sel(p + '.topEnd', a.topEnd, END_OPTS))}
     ${field('세로 배치', sel(p + '.alignB', a.alignB, alignOpts('하단', '상단')))}
@@ -1007,7 +1013,7 @@ function arcForm() {
         + field('스크린 앞면 반경 R', numIn(q + '.R', sg.R), 'mm') : ''}
       <div class="sub">가로 구성 (왼쪽 → 오른쪽) · ${sg.type === 'arc' && sg.kind === 'flex' ? '모듈 폭(호 길이)' : '캐비넷 폭'} × 수량</div>${listEd(q + '.cols', sg.cols, '폭', '수량')}
     </div>`;
-    if (i < segs.length - 1) h += `<div class="note" style="text-align:center;margin:-6px 0 8px">↓ 접선으로 이어짐</div>`;
+    if (i < segs.length - 1) h += `<div class="note" style="text-align:center;margin:-6px 0 8px">↓ 매끄럽게 이어짐</div>`;
   });
   h += `<button class="btn wide" data-act="addSeg">${icon('plus')}오른쪽에 구간 추가</button>`;
   return h;
@@ -1179,7 +1185,7 @@ function planSVG(R, st) {
   }
   return `<div class="svgbox"><svg viewBox="${minX - padL} ${minY - pad - fs} ${maxX - minX + padL + padR} ${maxY - minY + 2 * pad + fs}">${g}</svg></div>
     ${insets ? `<div class="insets">${insets}</div>` : ''}
-    <div class="legend"><span><i style="background:#9e9e9e"></i>벽 구조면</span><span><i style="background:#4fc3f7"></i>스크린(캐비넷)</span><span><i style="background:#ff9800"></i>파이프</span>
+    <div class="legend"><span><i style="background:#9e9e9e"></i>마감 전 벽면</span><span><i style="background:#4fc3f7"></i>스크린(캐비넷)</span><span><i style="background:#ff9800"></i>파이프</span>
     ${R.slabs.length ? '<span><i style="background:#fff176"></i>천장</span><span><i style="background:#a5d6a7"></i>바닥 (점선=투영)</span>' : ''}</div>`;
 }
 
@@ -1188,13 +1194,14 @@ function planSVG(R, st) {
  *  → 시작에서 닿으면 시작, 아니면 끝에서, 둘 다 안 되면 중간 기준점(step 배수)에서 이어 재기 */
 // 실제로 끊어 재는 길이: 5.5m → 5m, 7.5m → 7m, 10m → 9m (끝 여유분은 안 씀)
 function tapeUse(tape) { return Math.max(1000, tape % 1000 ? Math.floor(tape / 1000) * 1000 : tape - 1000); }
-function tapePlan(vals, total) {
+// endVals: 끝 기준에서의 거리 (가까운 면 기준이라 total - v 와 다를 수 있음)
+function tapePlan(vals, endVals) {
   const tape = num(state.common.tape) || 5500;
   const lim = tapeUse(tape), step = lim;
   const marks = new Set();
-  const plan = vals.map(v => {
+  const plan = vals.map((v, i) => {
     if (v <= lim) return { side: 'S', d: v };
-    if (total - v <= lim) return { side: 'E', d: total - v };
+    if (endVals[i] <= lim) return { side: 'E', d: endVals[i] };
     const k = Math.floor(v / step) * step; marks.add(k);
     return { side: 'M', d: v - k, mark: k };
   });
@@ -1214,18 +1221,20 @@ function pipeTable(r) {
     const list = L.pipes.map(p => ({ desc: p.desc, dw: m.fromEnd ? L.Lraw - p.c : p.c }));
     if (m.fromEnd) list.reverse();
     const farRef = m.fromEnd ? r.refs.aS : r.refs.aE;
-    const tp = tapePlan(list.map(p => p.dw - m.refOff), L.Lraw - m.refOff);
-    return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>중심<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>중심<br><small>${esc(farRef)}에서</small></th>${tp.need ? '<th>줄자</th>' : ''}</tr></thead><tbody>
-      ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff)}</td><td>${f(p.dw)}</td><td>${f(L.Lraw - p.dw)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}</tr>`).join('')}
+    // 강조값: 기준에서 가까운 파이프 면 = 중심 - 파이프 반폭
+    const tp = tapePlan(list.map(p => p.dw - m.refOff - h), list.map(p => L.Lraw - p.dw - h));
+    return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>가까운&nbsp;면<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th><th>가까운&nbsp;면<br><small>${esc(m.nbName)} 코너 벽면에서</small></th><th>가까운&nbsp;면<br><small>${esc(farRef)}에서</small></th>${tp.need ? '<th>줄자</th>' : ''}<th>중심&nbsp;(참고)<br><small>${esc(m.nbName)} 스크린 앞면에서</small></th></tr></thead><tbody>
+      ${list.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}${i === 0 ? ' <small>(코너쪽)</small>' : ''}</td><td class="highlight">${f(p.dw - m.refOff - h)}</td><td>${f(p.dw - h)}</td><td>${f(L.Lraw - p.dw - h)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}<td class="ref">${f(p.dw - m.refOff)}</td></tr>`).join('')}
     </tbody></table></div>
-    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 파란 숫자로 잽니다. 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다. 파이프 폭 ±${f1(h)}mm.</div>${tapeNote(tp, m.nbName + ' 스크린 앞면', farRef)}`;
+    <div class="note">${esc(m.nbName)} 먼저 설치 후, <b>설치된 ${esc(m.nbName)} 스크린 앞면</b>에 줄자를 대고 파란 숫자로 잽니다. 숫자는 줄자를 댄 쪽에서 <b>가까운 파이프 면</b>까지 거리입니다(파이프 ${f(h * 2)}각). 오차는 바깥 끝(${esc(farRef)})에서 정리됩니다.</div>${tapeNote(tp, m.nbName + ' 스크린 앞면', farRef)}`;
   }
   const ref = r.main === 'A' ? [r.refs.aS, r.refs.aE] : [r.refs.bS, r.refs.bE];
   const h = num(state.common.pipe) / 2;
-  const tp = tapePlan(L.pipes.map(p => p.c), L.Lraw);
-  return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심<br><small>${esc(ref[0])}에서</small></th><th>중심<br><small>${esc(ref[1])}에서</small></th>${tp.need ? '<th>줄자</th>' : ''}<th>설치 구간</th></tr></thead><tbody>
-    ${L.pipes.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(L.Lraw - p.c)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}<td>${f(p.c - h)} ~ ${f(p.c + h)}</td></tr>`).join('')}
-  </tbody></table></div>${tapeNote(tp, ref[0], ref[1])}`;
+  const tp = tapePlan(L.pipes.map(p => p.c - h), L.pipes.map(p => L.Lraw - p.c - h));
+  return `<div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>가까운&nbsp;면<br><small>${esc(ref[0])}에서</small></th><th>가까운&nbsp;면<br><small>${esc(ref[1])}에서</small></th>${tp.need ? '<th>줄자</th>' : ''}<th>중심&nbsp;(참고)<br><small>${esc(ref[0])}에서</small></th></tr></thead><tbody>
+    ${L.pipes.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c - h)}</td><td>${f(L.Lraw - p.c - h)}</td>${tp.need ? `<td class="tp">${tapeCell(tp.plan[i])}</td>` : ''}<td class="ref">${f(p.c)}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="note">파란 숫자 = 줄자를 댄 기준에서 <b>가까운 파이프 면</b>까지 거리(파이프 ${f(h * 2)}각). 그 선에 파이프 면을 맞춥니다.</div>${tapeNote(tp, ref[0], ref[1])}`;
 }
 
 function faceResult(r, pipe) {
@@ -1249,7 +1258,7 @@ function faceResult(r, pipe) {
     ${elevSVG(r, pipe)}
     <h3>${esc(r.mainLabel)} — 줄자 기준표</h3>
     ${pipeTable(r)}
-    <div class="note">직교 방향 끝단(보조) 파이프 중심: ${othAx} ${esc(othRef)}에서 <b>${f(oth.x0 + pipe / 2)}</b> / <b>${f(oth.x1 - pipe / 2)}</b> mm<br>
+    <div class="note">반대 방향 끝단 파이프(보조): ${othAx} ${esc(othRef)}에서 가까운 면 <b>${f(oth.x0)}</b> / <b>${f(oth.x1 - pipe)}</b> mm<br>
     파이프 깊이: 벽에서 ${f(dp.pipeBack)} ~ ${f(dp.pipeFront)} mm (앞면 = 스크린 앞면에서 ${f(dp.T - dp.pipeFront)} mm 뒤)</div>
   </div>`;
 }
@@ -1282,7 +1291,7 @@ function arcSVG(r) {
   let g = '';
   const fr = r.front.map(reg);
   g += `<polyline points="${fr.map(p => p.join(',')).join(' ')}" fill="none" stroke="#4fc3f7" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
-  const A0 = reg(r.pipes[0].P), B0 = reg(r.pipes[r.pipes.length - 1].P);
+  const A0 = reg(r.A0), B0 = reg(r.B0);
   g += `<line x1="${A0[0]}" y1="${A0[1]}" x2="${B0[0]}" y2="${B0[1]}" stroke="#bbb" stroke-dasharray="8 6" vector-effect="non-scaling-stroke"/>`;
   const M0 = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1);
   const fs = Math.max(M0 / 34, 60);
@@ -1313,15 +1322,16 @@ function renderArc() {
   if (r.error) { $('#results').innerHTML = `<div class="card st-err">${esc(r.error)}</div>`; return; }
   const pipe = r.pipe, B = r.Bl;
   const flexSegs = r.segInfo.filter(si => si.isArc && si.sg.kind === 'flex');
-  const tpA = tapePlan(r.pipes.map(p => p.x), r.chordP);
+  const tpA = tapePlan(r.pipes.map(p => p.fl[0]), r.pipes.map(p => r.chordP - p.fl[0]));
+  const xy = q => `${f(q[0])} / ${f(q[1])}`;
   // 파이프 방향 각도: 그 파이프 위치의 스크린 면이 기준선과 이루는 각 (+ = 오른쪽으로 갈수록 벽쪽)
   const phi = Math.atan2(r.u[1], r.u[0]);
   const pipeAng = p => { const a = p.hb - phi; return Math.atan2(Math.sin(a), Math.cos(a)); };
   let h = `<div class="card"><h2>곡면 산출 결과</h2>
     <div class="summary-grid">
       ${box('구간', `${r.segInfo.length}개 · ${r.segInfo.map(si => si.isArc ? (si.sgn < 0 ? '오목' : '볼록') : '평면').join('+')}`)}
-      ${box('스크린 전개 길이', `${f(r.totalW)} mm`)}
-      ${box('기준선(양끝 파이프) 길이', `${f(r.chordP)} mm`)}
+      ${box('스크린 길이 (화면 따라)', `${f(r.totalW)} mm`)}
+      ${box('기준선(양끝 파이프 모서리) 길이', `${f(r.chordP)} mm`)}
       ${box('앞뒤 폭 (전체 깊이)', `${f(r.depthRange)} mm`)}
       ${box('세로 높이 (캐비넷)', `${f(B.C)} mm`)}
       ${box('파이프 1본 길이(세로 파이프)', `${f(B.C)} mm`, 'highlight')}
@@ -1329,19 +1339,19 @@ function renderArc() {
     </div>
     ${r.warns.length ? `<ul class="alerts">${r.warns.map(w => `<li class="st-${w.lv}">${esc(w.tx)}</li>`).join('')}</ul>` : ''}
     ${arcSVG(r)}
-    <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
-    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th>${tpA.need ? '<th>X 줄자</th>' : ''}<th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>방향 각도<br><small>기준선 대비</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
-      ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td>${tpA.need ? `<td class="tp">${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${f(p.y)}</td><td class="highlight">${fas(pipeAng(p))}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
-    </tbody></table></div>${tapeNote(tpA, '1번 파이프', '마지막 파이프')}
-    <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. <b>방향 각도</b>는 그 파이프 자리에서 스크린 면이 기준선(실)과 이루는 각도입니다(+는 오른쪽으로 갈수록 벽쪽, −는 관람측). 파이프·브라켓은 이 각도로 돌려서, 스크린 면과 나란하게 세웁니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
+    <h3>세로 파이프 표시 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>앞 왼쪽 모서리<br><small>X / Y</small></th><th>앞 오른쪽 모서리<br><small>X / Y</small></th>${tpA.need ? '<th>왼쪽 X 줄자</th>' : ''}<th>방향 각도<br><small>기준선 대비</small></th><th>중심&nbsp;(참고)<br><small>X / Y</small></th><th>화면 따라<br>잰 길이</th><th>꺾임</th></tr></thead><tbody>
+      ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${xy(p.fl)}</td><td class="highlight">${xy(p.fr)}</td>${tpA.need ? `<td class="tp">${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${fas(pipeAng(p))}</td><td class="ref">${xy([p.x, p.y])}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
+    </tbody></table></div>${tapeNote(tpA, '1번 파이프 앞-왼쪽 모서리', '마지막 파이프 앞-오른쪽 모서리')}
+    <div class="note">기준선 = <b>1번 파이프 앞-왼쪽 모서리</b>와 <b>마지막 파이프 앞-오른쪽 모서리</b>를 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 모서리입니다. 두 모서리를 이은 선이 파이프 앞면(스크린쪽)입니다. 왼쪽 = 1번 쪽. <b>방향 각도</b>는 그 파이프 자리에서 스크린 면이 기준선(실)과 이루는 각도입니다(+는 오른쪽으로 갈수록 벽쪽, −는 관람측). 파이프·브라켓은 이 각도로 돌려서, 스크린 면과 나란하게 세웁니다. '화면 따라 잰 길이'는 스크린 앞면을 따라 왼쪽 끝에서 파이프 중심까지 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
     ${flexSegs.length ? `<h3>가로 벤딩 파이프 규격 (구간별)</h3>
-    <div class="table-container"><table><thead><tr><th>구간</th><th>레이어</th><th>중심 반경</th><th>호 길이(절단)</th><th>현 길이</th><th>휨 깊이</th></tr></thead><tbody>
+    <div class="table-container"><table><thead><tr><th>구간</th><th>파이프 줄</th><th>중심 반경</th><th>호 길이(절단)</th><th>양끝 직선거리</th><th>휜 깊이</th></tr></thead><tbody>
       ${flexSegs.map(si => [['1열', si.l1], ['2열', si.l2]].map(([n, l], k) => `<tr>${k === 0 ? `<td rowspan="2">${esc(segName(si.sg, si.si))}<br><small>${fa(si.Th)}</small></td>` : ''}<td>${n}</td><td class="highlight">${f(l.r)}</td><td>${f(l.arc)}</td><td>${f(l.chord)}</td><td>${f(l.sag)}</td></tr>`).join('')).join('')}
     </tbody></table></div>
     <div class="note">${state.arc.dir === 'h' ? '가로 벤딩 파이프(1열)를 구간마다 해당 반경으로 벤딩하고, 평면 구간은 직관으로 잇습니다. 세로 파이프는 그 뒤(2열).' : '세로 직관 파이프가 1열 → 가로 연결 파이프는 2열 반경으로 구간마다 벤딩.'} 오목·볼록이 바뀌는 곳은 벤딩 방향이 반대입니다. 호 길이는 구간 양끝 기준, 여유 절단분 별도.</div>` : ''}
     <h3>가로 파이프 높이 (바닥 기준)${state.arc.dir === 'h' ? ' — 주 파이프' : ' — 보조'}</h3>
-    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>중심 (하단에서)</th><th>중심 (상단에서)</th><th>설치 구간</th></tr></thead><tbody>
-      ${(state.arc.dir === 'h' ? B.pipes : [B.pipes[0], B.pipes[B.pipes.length - 1]].filter(Boolean)).map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c)}</td><td>${f(B.Lraw - p.c)}</td><td>${f(p.c - pipe / 2)} ~ ${f(p.c + pipe / 2)}</td></tr>`).join('')}
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>가까운&nbsp;면<br><small>하단에서</small></th><th>가까운&nbsp;면<br><small>상단에서</small></th><th>중심&nbsp;(참고)<br><small>하단에서</small></th></tr></thead><tbody>
+      ${(state.arc.dir === 'h' ? B.pipes : [B.pipes[0], B.pipes[B.pipes.length - 1]].filter(Boolean)).map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.desc)}</td><td class="highlight">${f(p.c - pipe / 2)}</td><td>${f(B.Lraw - p.c - pipe / 2)}</td><td class="ref">${f(p.c)}</td></tr>`).join('')}
     </tbody></table></div>
   </div>`;
   $('#results').innerHTML = h;
@@ -1362,7 +1372,7 @@ function renderPrintHead() {
   }
   $('#printHead').innerHTML = `<h1>LED 프레임 파이프 위치 — ${esc(state.projectName || '(현장 이름 없음)')}</h1>
     <div style="font-size:.8rem">출력 ${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} · 가이드삼정 김성혁 · v${APP_VERSION}<br>
-    파이프 ${num(c.pipe)}각 · 스크린 두께 ${f(num(c.t))} · ${c.depthMode === 'recess' ? `매립 D ${f(num(c.D))} / 조정 ${f(num(c.adj))}` : `벽부착 이격 ${f(num(c.standoff))}`} · T ${f(commonT(c))} · 편심 ${f(num(c.shift))}</div>${rows}`;
+    파이프 ${num(c.pipe)}각 · 스크린 두께 ${f(num(c.t))} · ${c.depthMode === 'recess' ? `매립 D ${f(num(c.D))} / 조정 ${f(num(c.adj))}` : `벽부착 띄움 ${f(num(c.standoff))}`} · T ${f(commonT(c))} · 편심 ${f(num(c.shift))}</div>${rows}`;
 }
 
 function renderResults() {
