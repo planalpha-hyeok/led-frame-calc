@@ -299,6 +299,7 @@
       <li><b>R</b>: 원 중심에서 스크린 앞면까지 반경.</li>
       <li><b>플렉시블</b>은 매끈한 곡선(가로 파이프 벤딩), <b>평판 꺾음</b>은 일반 캐비넷을 조금씩 꺾어 붙인 다각형입니다.</li>
       <li><b>먹매김 방법</b>: 바닥에 1번과 마지막 파이프 중심을 찍고 실을 띄웁니다. 실을 따라 X만큼 간 지점에서 직각으로 Y만큼 떨어진 곳이 파이프 중심입니다.</li>
+      <li><b>방향 각도</b>: 그 파이프 자리에서 스크린 면이 실(기준선)과 이루는 각도입니다. +는 오른쪽으로 갈수록 벽쪽으로 올라가는 방향, −는 관람측으로 내려가는 방향입니다. 꺾임 칸은 캐비넷끼리 꺾이는 각도라서 플렉시블은 "-"로 나옵니다.</li>
       <li><b>벤딩 파이프 규격</b>: 곡면 구간마다 반경과 절단 길이가 나옵니다. 오목↔볼록이 바뀌는 곳은 벤딩 방향이 반대입니다. 여유 절단분은 따로 더하세요.</li>
       <li>먹매김 표의 <b>Y는 +면 벽쪽, −면 관람측</b>입니다. S자처럼 기준선을 가로지르는 경우 부호를 꼭 확인하세요.</li>
     </ul>
@@ -327,6 +328,7 @@
 
     <h4>업데이트 내역</h4>
     <ul>
+      <li><b>v2.8.1</b>: 곡면 먹매김 표에 파이프 방향 각도(기준선 대비) 추가</li>
       <li><b>v2.8</b>: 화면 디자인 정리 (iOS 스타일 카드·세그먼트 탭·선 아이콘, 결과 요약 목록형, 표 가로 스크롤 · No. 열 고정, 줄자 기준 숫자 파랑)</li>
       <li><b>v2.7.1</b>: 줄자는 5m 단위로 끊어 재는 것으로 변경 (5.5m → 5m)</li>
       <li><b>v2.7</b>: 줄자 길이(기본 5.5m) 반영 — 닿지 않으면 반대쪽 끝·중간 기준점에서 재도록 안내</li>
@@ -359,6 +361,7 @@ const r1 = n => { const v = Math.round(n * 10) / 10; return Object.is(v, -0) ? 0
 const f = n => { const v = Math.round(n); return String(Object.is(v, -0) ? 0 : v); }; // mm: 정수
 const f1 = n => String(r1(n)); // 소수 1자리 (피치·겹침 등)
 const fa = rad => { const v = Math.round(Math.abs(rad) * 180 / Math.PI * 2) / 2; return `${v}°`; }; // 각도: 0.5° 단위
+const fas = rad => { const v = Math.round(rad * 180 / Math.PI * 2) / 2; return v > 0 ? `+${v}°` : `${Object.is(v, -0) ? 0 : v}°`; }; // 부호 있는 각도
 const deg = rad => r1(rad * 180 / Math.PI);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -452,7 +455,7 @@ function defaultState() {
   const p = PRESETS.flat.make();
   return { mode: 'chain', common: { ...DEFAULT_COMMON, ...p.common }, chain: p.chain, arc: clone(DEFAULT_ARC) };
 }
-const APP_VERSION = '2.8';
+const APP_VERSION = '2.8.1';
 const LS_KEY = 'ledFrameCalc.v2';
 const LS_PROJ = 'ledFrameCalc.projects';
 // 저장본/공유본을 현재 구조에 맞게 보정
@@ -1311,6 +1314,9 @@ function renderArc() {
   const pipe = r.pipe, B = r.Bl;
   const flexSegs = r.segInfo.filter(si => si.isArc && si.sg.kind === 'flex');
   const tpA = tapePlan(r.pipes.map(p => p.x), r.chordP);
+  // 파이프 방향 각도: 그 파이프 위치의 스크린 면이 기준선과 이루는 각 (+ = 오른쪽으로 갈수록 벽쪽)
+  const phi = Math.atan2(r.u[1], r.u[0]);
+  const pipeAng = p => { const a = p.hb - phi; return Math.atan2(Math.sin(a), Math.cos(a)); };
   let h = `<div class="card"><h2>곡면 산출 결과</h2>
     <div class="summary-grid">
       ${box('구간', `${r.segInfo.length}개 · ${r.segInfo.map(si => si.isArc ? (si.sgn < 0 ? '오목' : '볼록') : '평면').join('+')}`)}
@@ -1324,10 +1330,10 @@ function renderArc() {
     ${r.warns.length ? `<ul class="alerts">${r.warns.map(w => `<li class="st-${w.lv}">${esc(w.tx)}</li>`).join('')}</ul>` : ''}
     ${arcSVG(r)}
     <h3>세로 파이프 먹매김 (${state.arc.dir === 'h' ? '2열, 벤딩 파이프 뒤' : '1열'})</h3>
-    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th>${tpA.need ? '<th>X 줄자</th>' : ''}<th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
-      ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td>${tpA.need ? `<td class="tp">${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${f(p.y)}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
+    <div class="table-container"><table><thead><tr><th>No.</th><th>위치</th><th>구간</th><th>기준선 따라 X</th>${tpA.need ? '<th>X 줄자</th>' : ''}<th>기준선에서 Y<br><small>+벽쪽 / −관람측</small></th><th>방향 각도<br><small>기준선 대비</small></th><th>전개 길이</th><th>꺾임</th></tr></thead><tbody>
+      ${r.pipes.map((p, i) => `<tr${p.border ? ' style="background:var(--row-hi)"' : ''}><td>${p.index}</td><td>${esc(p.desc)}</td><td>${typeof p.si === 'number' ? p.si + 1 : p.si}</td><td class="highlight">${f(p.x)}</td>${tpA.need ? `<td class="tp">${tapeCell(tpA.plan[i])}</td>` : ''}<td class="highlight">${f(p.y)}</td><td class="highlight">${fas(pipeAng(p))}</td><td>${f(p.s)}</td><td>${Math.abs(p.turn) > 0.0005 ? fa(p.turn) : '-'}</td></tr>`).join('')}
     </tbody></table></div>${tapeNote(tpA, '1번 파이프', '마지막 파이프')}
-    <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
+    <div class="note">기준선 = 1번과 마지막 파이프 중심을 잇는 직선(길이 ${f(r.chordP)} mm). 바닥에 실을 띄우고, X만큼 간 지점에서 직각으로 Y만큼(+는 벽쪽, −는 관람측) 떨어진 곳이 파이프 중심입니다. <b>방향 각도</b>는 그 파이프 자리에서 스크린 면이 기준선(실)과 이루는 각도입니다(+는 오른쪽으로 갈수록 벽쪽, −는 관람측). 파이프·브라켓은 이 각도로 돌려서, 스크린 면과 나란하게 세웁니다. 전개 길이는 스크린 앞면을 따라 왼쪽 끝에서 잰 길이입니다. 빨간 칸 = 구간 경계.</div>
     ${flexSegs.length ? `<h3>가로 벤딩 파이프 규격 (구간별)</h3>
     <div class="table-container"><table><thead><tr><th>구간</th><th>레이어</th><th>중심 반경</th><th>호 길이(절단)</th><th>현 길이</th><th>휨 깊이</th></tr></thead><tbody>
       ${flexSegs.map(si => [['1열', si.l1], ['2열', si.l2]].map(([n, l], k) => `<tr>${k === 0 ? `<td rowspan="2">${esc(segName(si.sg, si.si))}<br><small>${fa(si.Th)}</small></td>` : ''}<td>${n}</td><td class="highlight">${f(l.r)}</td><td>${f(l.arc)}</td><td>${f(l.chord)}</td><td>${f(l.sag)}</td></tr>`).join('')).join('')}
